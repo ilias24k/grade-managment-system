@@ -10,7 +10,7 @@ xlsx,hbs, nodemon,express, mongodb, mongoose, exceljs,multer
 
 to start : 
 start database:
-/Users/ilias/mongodb/bin/mongod.exe --dbpath=/Users/ilias/mongodb-data
+/Users/YourUserName/mongodb/bin/mongod.exe --dbpath=/Users/YourUserName/mongodb-data
 
 then: 
 node src/index.js
