@@ -11,13 +11,8 @@ const courseSchema = new mongoose.Schema({
     gradeMaintainTime: {
         type: Number,
         required: true,
-        default: 1,         // default time in years for maintaining grade of course 
+        default: 1      // default time in years for maintaining grade of course 
 
-        validate(value) {
-            if (value < 0) {
-                throw new Error('Grade Maintaining Time must be possitive and greater than 0')
-            }
-        }
     },
     remainingTime: {
         type: Number,
