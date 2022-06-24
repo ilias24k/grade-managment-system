@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Grade Mangment</title>
+
+<body>
+
+    <div class="main-content">
+
+        {{>main}}
+
+
+        <div class="container pt-5 pb-5">
+            <!-- Content here -->
+
+            <body>
+                <h1>Students</h1>
+                <p>All Students</p>
+
+
+
+                <table class="table table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Student Name</th>
+
+                            <th scope="col">Email</th>
+
+                            <th scope="col" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each studentList}}
+                        <tr>
+                            <td>{{name}}</td>
+
+                            <td>{{email}}</td>
+                            <td class="text-end">
+                                
+                                <form action="/student/delete/{{_id}}" method="POST">
+                                    <input type="hidden" name="id" value="{{ _id}}">
+                                    <button class="btn btn-outline-danger"><i class="bi bi-person-x"></i><i
+                                            onclick="deleting({{_id}})">Delete</button>
+                                </form>
+                            </td>
+
+                        </tr>
+                        {{/each}}
+                    </tbody>
+
+
+                    </tr>
+                    </tbody>
+                </table>
+
+
+            </body>
+        </div>
+
+
+    </div>
+
+
+</body>
+
+</head>
+
+</html>
