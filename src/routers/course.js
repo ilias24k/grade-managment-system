@@ -47,11 +47,12 @@ async function uploadFiles(req, res) {
     var data = fs.readFileSync(req.file.path)
     const newDataJSON = data.toString()
     const newData = JSON.parse(newDataJSON)
-    const course = new Course(newData)
+    Course.insertMany(newData, function (error, docs) {
 
+    })
 
     try {
-        await course.save()
+        // await course.save()
         res.status(201)
         res.redirect('/course')
     } catch (e) {
@@ -172,7 +173,7 @@ router.patch('/course/edit/:id', async (req, res) => {       /// patch!!!
                 { safe: true, upsert: true },
                 function (err, model) {
                     if (model) {
-                        
+
                         return res.status(200).send({ result: 'redirect', url: '/course/edit/' + req.params.id })
                     }
                 }
@@ -243,7 +244,7 @@ router.patch('/course/edit/delete/:id', async (req, res) => {
             { safe: true, upsert: true },
             function (err, model) {
                 if (model) {
-                    
+
                     return res.status(200).send({ result: 'redirect', url: '/course/edit/' + CourseId })
                 }
             }
@@ -280,7 +281,7 @@ router.patch('/course/edit/deleteLab/:id', async (req, res) => {
             { safe: true, upsert: true },
             function (err, model) {
                 if (model) {
-                    
+
                     return res.status(200).send({ result: 'redirect', url: '/course/edit/' + CourseId })
                 }
             }
