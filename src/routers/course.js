@@ -81,7 +81,7 @@ router.get('/course', async (req, res) => {
 })
 
 
-//getting specific course
+//getting specific course students
 
 router.get('/course/:id', async (req, res) => {
     const _id = req.params.id

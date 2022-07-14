@@ -418,7 +418,8 @@ router.put('/student/edit/:id', async (req, res) => {
 
 router.post('/student/delete/:id', async (req, res) => {
     try {
-
+        var courseId = req.headers.referer.split('/')[4].slice(0,-1)
+       
         Student.findOneAndDelete({ _id: req.params.id })
             .exec(function (err, removed) {
                 Course.findOneAndUpdate(
@@ -427,12 +428,12 @@ router.post('/student/delete/:id', async (req, res) => {
                     { $pull: { students: req.params.id } },
                     { new: true },
                     function (err, removedFromUser) {
-
+                        courseId =removedFromUser._id
                     })
             })
 
 
-        res.redirect('/student');
+        res.redirect('/course/' +courseId);
     } catch (e) {
         res.status(500).send()
     }
