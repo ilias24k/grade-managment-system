@@ -41,6 +41,8 @@ const upload = multer({
     dest: 'files'
 })
 
+// uploading courses 
+
 router.post('/upload_course', upload.single("files"), uploadFiles);
 async function uploadFiles(req, res) {
 
@@ -62,8 +64,7 @@ async function uploadFiles(req, res) {
 
 }
 
-
-
+//getting all courses
 
 router.get('/course', async (req, res) => {
 
@@ -80,7 +81,7 @@ router.get('/course', async (req, res) => {
 })
 
 
-
+//getting specific course
 
 router.get('/course/:id', async (req, res) => {
     const _id = req.params.id
@@ -104,7 +105,9 @@ router.get('/course/:id', async (req, res) => {
 
 })
 
-router.get('/course/edit/:id', async (req, res) => {               //gets view and converts to html
+//getting  course lab and theory parts
+
+router.get('/course/edit/:id', async (req, res) => {
 
     const _id = req.params.id
 
@@ -149,13 +152,12 @@ router.get('/course/edit/:id', async (req, res) => {               //gets view a
 
 })
 
-
-router.patch('/course/edit/:id', async (req, res) => {       /// patch!!!
+//editing course weights
+router.patch('/course/edit/:id', async (req, res) => {
 
     try {
-        // const course = await Course.findByIdAndUpdate(req.params.id)
-        // console.log(req.body.theory.length, req.body.lab)
 
+        // console.log(req.body.theory.length, req.body.lab)
 
         const course = {}
         if (req.body.theory && req.body.lab) {
@@ -225,6 +227,8 @@ router.patch('/course/edit/:id', async (req, res) => {       /// patch!!!
     }
 
 })
+// deleting course theory
+
 router.patch('/course/edit/delete/:id', async (req, res) => {
 
     try {
@@ -258,6 +262,8 @@ router.patch('/course/edit/delete/:id', async (req, res) => {
         res.status(500).send()
     }
 })
+
+// deleting course lab
 
 router.patch('/course/edit/deleteLab/:id', async (req, res) => {
 
@@ -297,6 +303,8 @@ router.patch('/course/edit/deleteLab/:id', async (req, res) => {
 })
 
 //changed from delete to post due to html only handling post and get
+//deleting course
+
 router.post('/course/delete/:id', async (req, res) => {
     try {
         const course = await Course.findByIdAndDelete(req.params.id)
@@ -309,6 +317,8 @@ router.post('/course/delete/:id', async (req, res) => {
         res.status(500).send()
     }
 })
+
+// functions to get grades  ids and names 
 
 function DBnames(arr1) {
     // console.log('fun names')

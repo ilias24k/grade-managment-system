@@ -47,7 +47,7 @@ hbs.registerHelper("inc", function (value, options) {
 
 const directory = 'files';
 
-//clearing file list on files directory every 5 secs
+//clearing file list on files directory every 10 secs
 
 function clearFiles() {
 
@@ -65,21 +65,34 @@ function clearFiles() {
 }
 
 clearFiles();
-const directory2 = 'typical';
+
+//deleting generated excel files 
+
+const analyticalDir = 'analytical'
+const typicalDir = 'typical';
 
 function clearFiles2() {
 
-  fs.readdir(directory2, (err, files) => {
+  fs.readdir(analyticalDir, (err, files) => {
     if (err) throw err;
 
     for (const file of files) {
-      fs.unlink(path.join(directory2, file), err => {
+      fs.unlink(path.join(analyticalDir, file), err => {
+        if (err) throw err;
+      });
+    }
+  });
+  fs.readdir(typicalDir, (err, files) => {
+    if (err) throw err;
+
+    for (const file of files) {
+      fs.unlink(path.join(typicalDir, file), err => {
         if (err) throw err;
       });
     }
   });
 
-  setTimeout(clearFiles, 5000);
+  setTimeout(clearFiles2, 5000);
 }
 
 clearFiles2();
@@ -101,7 +114,6 @@ async function clearStuds() {
     for (var y = 0; y < records.length; y++) {
       courseDate = records[y].updatedAt.toString()
       yearOfStudentUpdate = courseDate.substring(11, 15)                  // last updated grade in YYYY
-
       // console.log( records[y].id)
       if ((currentYear - yearOfStudentUpdate) > courses[i].gradeMaintainTime) {
         id = records[y].id

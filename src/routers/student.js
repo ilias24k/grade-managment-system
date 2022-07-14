@@ -15,6 +15,7 @@ const upload = multer({
     dest: 'files'
 })
 
+// analytical excel file 
 
 router.get('/download/analytical/:id', async function (req, res) {
     var fs = require('fs');
@@ -119,8 +120,9 @@ router.get('/download/analytical/:id', async function (req, res) {
             res.download(file);
         });
 
-
 });
+
+// typical excel file
 
 router.get('/download/typical/:id', async function (req, res) {
     var fs = require('fs');
@@ -129,7 +131,7 @@ router.get('/download/typical/:id', async function (req, res) {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
-    console.log(req.params.id)
+    // console.log(req.params.id)
     const course = await Course.findById(req.params.id)
     CourseStudents = course.students
 
@@ -291,8 +293,6 @@ router.get('/student/edit/:id', async (req, res) => {
             arr2.push(obj);
         })
 
-        // const course = Course.find({ "students": { $eq: req.params.id } })
-
         res.render('editStudent', { arr: arr, arr2: arr2 })
         if (!student) {
             // return res.status(404).send()
@@ -303,14 +303,12 @@ router.get('/student/edit/:id', async (req, res) => {
     }
 })
 
-
+//grading students
 
 
 router.put('/student/edit/:id', async (req, res) => {
 
     try {
-
-
 
         if (req.body.theory && req.body.lab) {
             const course = await Course.find({ 'students': { $eq: req.params.id } });
@@ -416,6 +414,7 @@ router.put('/student/edit/:id', async (req, res) => {
 
 })
 
+//deleting students
 
 router.post('/student/delete/:id', async (req, res) => {
     try {
@@ -438,6 +437,8 @@ router.post('/student/delete/:id', async (req, res) => {
         res.status(500).send()
     }
 })
+
+// functions to get grades  ids and names 
 
 function DbNames(arr1) {
     // console.log('fun names')
