@@ -45,6 +45,12 @@ hbs.registerHelper("inc", function (value, options) {
 });
 
 
+
+var dir = './analytical';
+var dir2 = './typical';
+
+
+
 const directory = 'files';
 
 //clearing file list on files directory every 10 secs
@@ -72,25 +78,30 @@ const analyticalDir = 'analytical'
 const typicalDir = 'typical';
 
 function clearFiles2() {
+  if (!fs.existsSync(dir) && !fs.existsSync(dir2)) {
+    fs.mkdirSync(dir);
+    fs.mkdirSync(dir2)
+  } else {
+    fs.readdir(analyticalDir, (err, files) => {
+      if (err) throw err;
 
-  fs.readdir(analyticalDir, (err, files) => {
-    if (err) throw err;
+      for (const file of files) {
+        fs.unlink(path.join(analyticalDir, file), err => {
+          if (err) throw err;
+        });
+      }
+    });
+    fs.readdir(typicalDir, (err, files) => {
+      if (err) throw err;
 
-    for (const file of files) {
-      fs.unlink(path.join(analyticalDir, file), err => {
-        if (err) throw err;
-      });
-    }
-  });
-  fs.readdir(typicalDir, (err, files) => {
-    if (err) throw err;
+      for (const file of files) {
+        fs.unlink(path.join(typicalDir, file), err => {
+          if (err) throw err;
+        });
+      }
+    });
+  }
 
-    for (const file of files) {
-      fs.unlink(path.join(typicalDir, file), err => {
-        if (err) throw err;
-      });
-    }
-  });
 
   setTimeout(clearFiles2, 5000);
 }
