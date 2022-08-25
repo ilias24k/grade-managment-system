@@ -9,6 +9,7 @@ const multer = require('multer')
 const { json } = require('body-parser')
 const path = require('path')
 const exceljs = require('exceljs')
+const auth = require('../middleware/auth')
 
 
 const upload = multer({
@@ -227,7 +228,7 @@ async function uploadFiles(req, res) {
     res.send()
 }
 // getting all students of all courses
-router.get('/student', async (req, res) => {
+router.get('/student',auth, async (req, res) => {
 
     try {
         const students = await Student.find({})
@@ -241,7 +242,7 @@ router.get('/student', async (req, res) => {
 
 })
 
-router.get('/student/:id', async (req, res) => {
+router.get('/student/:id', auth,async (req, res) => {
     const _id = req.params.id
 
     try {
@@ -256,7 +257,7 @@ router.get('/student/:id', async (req, res) => {
 
 })
 
-router.get('/student/edit/:id', async (req, res) => {
+router.get('/student/edit/:id', auth,async (req, res) => {
 
     try {
         // const student = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
@@ -306,7 +307,7 @@ router.get('/student/edit/:id', async (req, res) => {
 //grading students
 
 
-router.put('/student/edit/:id', async (req, res) => {
+router.put('/student/edit/:id', auth,async (req, res) => {
 
     try {
 
@@ -416,7 +417,7 @@ router.put('/student/edit/:id', async (req, res) => {
 
 //deleting students
 
-router.post('/student/delete/:id', async (req, res) => {
+router.post('/student/delete/:id',auth, async (req, res) => {
     try {
         //checking header and  referer for redirecting purposes
 

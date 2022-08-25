@@ -1,29 +1,82 @@
 const express = require('express')
 const router = new express.Router()
 const User = require('../models/user')
+const { use, route } = require('./home')
+const auth = require('../middleware/auth')
+const res = require('express/lib/response')
 
-
-router.post('/users', async (req, res) => {
-    const user = new User(req.body)
+router.get('/users/signup', async (req, res) => {
 
     try {
+
+        res.render('signup')
+    } catch (e) {
+        res.status(500).send()
+    }
+
+})
+router.post('/users/signup', async (req, res) => {
+    const user = new User(req.body)
+    console.log(user)
+    try {
         await user.save()
-        res.status(201).send(user)
+        const token = await user.generateAuthToken()
+        // res.status(201).send({ user, token })  
+        res.redirect('/users/login')             //redirect to main
 
     } catch (e) {
-        01
+
         res.status(400).send(e)
     }
 
 })
-router.get('/users', async (req, res) => {
+
+router.get('/users/login', async (req, res) => {
 
     try {
-        const users = await User.find({})
-        res.send(users)
+
+        res.render('login')
     } catch (e) {
         res.status(500).send()
     }
+
+})
+router.post('/users/login', async (req, res) => {
+    // console.log(req.body.email)
+    try {
+        const user = await User.findByCredentials(req.body.email, req.body.password)
+        const token = await user.generateAuthToken()
+        res.cookie('cookie name', token)
+        req.session.loggedin = true
+        // res.send({ user, token })
+        res.redirect('/course')
+    } catch (e) {
+        res.status(400).send()
+    }
+
+})
+
+router.post('/users/logout', auth, async (req, res) => {
+    // console.log('prin bei')
+    try {
+        console.log(req.cookie)
+        req.user.tokens = req.user.tokens.filter((token) => {
+            // console.log('bike mesa')
+            res.clearCookie('cookie name')
+            return token.token !== req.cookie
+        })
+        await req.user.save()
+        res.redirect('/')
+    } catch (e) {
+        res.status(500).send()
+    }
+})
+
+
+
+router.get('/users/me', auth, async (req, res) => {
+
+    res.send(req.user)
 
 })
 
@@ -53,7 +106,11 @@ router.patch('/users/:id', async (req, res) => {
     }
 
     try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+
+        const user = await User.findById(req.params.id)
+        updates.forEach((update) => user[update] = req.body[update])
+        await user.save()
+        // const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
 
         if (!user) {
             return res.status(404).send()
@@ -65,11 +122,11 @@ router.patch('/users/:id', async (req, res) => {
     }
 })
 
-router.delete('/users/:id', async (req,res) =>{
+router.delete('/users/:id', async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id)
 
-        if(!user){
+        if (!user) {
             return res.status(404).send()
         }
         res.send(user)

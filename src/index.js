@@ -10,15 +10,17 @@ const bodyParser = require('body-parser')
 const fs = require('fs')
 const Course = require('../src/models/course')
 const Student = require('../src/models/student')
+const cookieParser = require('cookie-parser');
 
 
 
 const app = express()
 const port = process.env.port || 4000
-
+app.use(cookieParser());
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
+
 
 
 app.use(homeRouter)
@@ -26,8 +28,27 @@ app.use(userRouter)
 app.use(courseRouter)
 app.use(studentRouter)
 
+//fix for buttons
+
+// app.use(function(req,res,next){
+//   var cookie = req.cookies['cookie name']
+//   var cookieFlag = false
+//   // console.log(cookie)
+//   if (cookie) {
+//       res.cookie = req.cookies['cookie name'];
+//       cookieFlag = true
+//       // console.log('if ' +cookie)
+//   }else if(cookie==undefined){
+//     cookie = undefined
+//     // console.log('else '+ cookie)
+//     cookieFlag = false
+//   }
+//   next();
+//   });
+  
 
 const multer = require('multer')
+const async = require('hbs/lib/async')
 const upload = multer({ dest: 'files' })
 
 const publicDirectoryPath = path.join(__dirname, '../public')
@@ -144,6 +165,10 @@ async function clearStuds() {
 }
 
 clearStuds();
+
+const jwt = require('jsonwebtoken');
+const res = require('express/lib/response')
+const { next } = require('mongodb/lib/operations/cursor_ops')
 
 
 

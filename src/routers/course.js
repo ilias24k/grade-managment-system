@@ -4,6 +4,7 @@ const router = new express.Router()
 const Course = require('../models/course')
 const multer = require('multer')
 const fs = require('fs')
+const auth = require('../middleware/auth')
 
 
 const path = require("path");
@@ -66,8 +67,8 @@ async function uploadFiles(req, res) {
 
 //getting all courses
 
-router.get('/course', async (req, res) => {
-
+router.get('/course', auth,async (req, res) => {
+    console.log(req.cookie)
     try {
         const courses = await Course.find({})
         // res.send(courses)
@@ -83,7 +84,7 @@ router.get('/course', async (req, res) => {
 
 //getting specific course students
 
-router.get('/course/:id', async (req, res) => {
+router.get('/course/:id', auth,async (req, res) => {
     const _id = req.params.id
 
     try {
@@ -107,7 +108,7 @@ router.get('/course/:id', async (req, res) => {
 
 //getting  course lab and theory parts
 
-router.get('/course/edit/:id', async (req, res) => {
+router.get('/course/edit/:id', auth, async (req, res) => {
 
     const _id = req.params.id
 
@@ -153,7 +154,7 @@ router.get('/course/edit/:id', async (req, res) => {
 })
 
 //editing course weights
-router.patch('/course/edit/:id', async (req, res) => {
+router.patch('/course/edit/:id',auth, async (req, res) => {
 
     try {
 
@@ -229,7 +230,7 @@ router.patch('/course/edit/:id', async (req, res) => {
 })
 // deleting course theory
 
-router.patch('/course/edit/delete/:id', async (req, res) => {
+router.patch('/course/edit/delete/:id', auth, async (req, res) => {
 
     try {
         // console.log(req.body.theory, req.body.lab)
@@ -265,7 +266,7 @@ router.patch('/course/edit/delete/:id', async (req, res) => {
 
 // deleting course lab
 
-router.patch('/course/edit/deleteLab/:id', async (req, res) => {
+router.patch('/course/edit/deleteLab/:id',auth, async (req, res) => {
 
     try {
 
@@ -305,7 +306,7 @@ router.patch('/course/edit/deleteLab/:id', async (req, res) => {
 //changed from delete to post due to html only handling post and get
 //deleting course
 
-router.post('/course/delete/:id', async (req, res) => {
+router.post('/course/delete/:id', auth, async (req, res) => {
     try {
         const course = await Course.findByIdAndDelete(req.params.id)
 
