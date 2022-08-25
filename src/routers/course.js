@@ -60,8 +60,8 @@ async function uploadFiles(req, res) {
         course = new Course(newData[i])
         Object.keys(newData[i].theory)
             .forEach(function eachKey(key) {
-                console.log(key);
-                console.log(newData[i].theory[key]);
+                // console.log(key);
+                // console.log(newData[i].theory[key]);
                 course.theory.id.push(count)
                 course.theory.names.push(key)
 
@@ -70,18 +70,19 @@ async function uploadFiles(req, res) {
             });
         count = 1;
 
-        Object.keys(newData[i].lab)
-            .forEach(function eachKey(key) {
-                console.log(key);
-                console.log(newData[i].lab[key]);
-                course.lab.id.push(count)
-                course.lab.names.push(key)
+        if (newData[i].lab) {
+            Object.keys(newData[i].lab)
+                .forEach(function eachKey(key) {
+                    // console.log(key);
+                    // console.log(newData[i].lab[key]);
+                    course.lab.id.push(count)
+                    course.lab.names.push(key)
 
-                course.lab.weight.push(newData[i].lab[key])
-                count += 1
-            });
-        count = 1;
-
+                    course.lab.weight.push(newData[i].lab[key])
+                    count += 1
+                });
+            count = 1;
+        }
         course.save()
     }
 
