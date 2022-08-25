@@ -47,7 +47,7 @@ router.post('/users/login', async (req, res) => {
         const user = await User.findByCredentials(req.body.email, req.body.password)
         const token = await user.generateAuthToken()
         res.cookie('cookie name', token)
-        req.session.loggedin = true
+        
         // res.send({ user, token })
         res.redirect('/course')
     } catch (e) {

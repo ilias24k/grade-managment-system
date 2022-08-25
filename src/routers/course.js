@@ -50,9 +50,41 @@ async function uploadFiles(req, res) {
     var data = fs.readFileSync(req.file.path)
     const newDataJSON = data.toString()
     const newData = JSON.parse(newDataJSON)
-    Course.insertMany(newData, function (error, docs) {
 
-    })
+    var course
+
+    var count = 1
+    console.log(newData[0].lab)
+
+    for (var i = 0; i < newData.length; i++) {
+        course = new Course(newData[i])
+        Object.keys(newData[i].theory)
+            .forEach(function eachKey(key) {
+                console.log(key);
+                console.log(newData[i].theory[key]);
+                course.theory.id.push(count)
+                course.theory.names.push(key)
+
+                course.theory.weight.push(newData[i].theory[key])
+                count += 1
+            });
+        count = 1;
+
+        Object.keys(newData[i].lab)
+            .forEach(function eachKey(key) {
+                console.log(key);
+                console.log(newData[i].lab[key]);
+                course.lab.id.push(count)
+                course.lab.names.push(key)
+
+                course.lab.weight.push(newData[i].lab[key])
+                count += 1
+            });
+        count = 1;
+
+        course.save()
+    }
+
 
     try {
         // await course.save()
@@ -67,7 +99,7 @@ async function uploadFiles(req, res) {
 
 //getting all courses
 
-router.get('/course', auth,async (req, res) => {
+router.get('/course', auth, async (req, res) => {
     console.log(req.cookie)
     try {
         const courses = await Course.find({})
@@ -84,7 +116,7 @@ router.get('/course', auth,async (req, res) => {
 
 //getting specific course students
 
-router.get('/course/:id', auth,async (req, res) => {
+router.get('/course/:id', auth, async (req, res) => {
     const _id = req.params.id
 
     try {
@@ -154,7 +186,7 @@ router.get('/course/edit/:id', auth, async (req, res) => {
 })
 
 //editing course weights
-router.patch('/course/edit/:id',auth, async (req, res) => {
+router.patch('/course/edit/:id', auth, async (req, res) => {
 
     try {
 
@@ -266,7 +298,7 @@ router.patch('/course/edit/delete/:id', auth, async (req, res) => {
 
 // deleting course lab
 
-router.patch('/course/edit/deleteLab/:id',auth, async (req, res) => {
+router.patch('/course/edit/deleteLab/:id', auth, async (req, res) => {
 
     try {
 
