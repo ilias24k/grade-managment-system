@@ -27,25 +27,7 @@ app.use(homeRouter)
 app.use(userRouter)
 app.use(courseRouter)
 app.use(studentRouter)
-
-//fix for buttons
-
-// app.use(function(req,res,next){
-//   var cookie = req.cookies['cookie name']
-//   var cookieFlag = false
-//   // console.log(cookie)
-//   if (cookie) {
-//       res.cookie = req.cookies['cookie name'];
-//       cookieFlag = true
-//       // console.log('if ' +cookie)
-//   }else if(cookie==undefined){
-//     cookie = undefined
-//     // console.log('else '+ cookie)
-//     cookieFlag = false
-//   }
-//   next();
-//   });
-  
+ 
 
 const multer = require('multer')
 const async = require('hbs/lib/async')

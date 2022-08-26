@@ -52,9 +52,7 @@ async function uploadFiles(req, res) {
     const newData = JSON.parse(newDataJSON)
 
     var course
-
     var count = 1
-    console.log(newData[0].lab)
 
     for (var i = 0; i < newData.length; i++) {
         course = new Course(newData[i])
@@ -86,7 +84,6 @@ async function uploadFiles(req, res) {
         course.save()
     }
 
-
     try {
         // await course.save()
         res.status(201)
@@ -101,7 +98,7 @@ async function uploadFiles(req, res) {
 //getting all courses
 
 router.get('/course', auth, async (req, res) => {
-    console.log(req.cookie)
+    // console.log(req.cookie)
     try {
         const courses = await Course.find({})
         // res.send(courses)

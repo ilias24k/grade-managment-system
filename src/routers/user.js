@@ -47,7 +47,7 @@ router.post('/users/login', async (req, res) => {
         const user = await User.findByCredentials(req.body.email, req.body.password)
         const token = await user.generateAuthToken()
         res.cookie('cookie name', token)
-        
+
         // res.send({ user, token })
         res.redirect('/course')
     } catch (e) {
@@ -57,11 +57,11 @@ router.post('/users/login', async (req, res) => {
 })
 
 router.post('/users/logout', auth, async (req, res) => {
-    // console.log('prin bei')
+
     try {
         console.log(req.cookie)
         req.user.tokens = req.user.tokens.filter((token) => {
-            // console.log('bike mesa')
+
             res.clearCookie('cookie name')
             return token.token !== req.cookie
         })
@@ -74,11 +74,11 @@ router.post('/users/logout', auth, async (req, res) => {
 
 
 
-router.get('/users/me', auth, async (req, res) => {
+// router.get('/users/me', auth, async (req, res) => {
 
-    res.send(req.user)
+//     res.send(req.user)
 
-})
+// })
 
 router.get('/users/:id', async (req, res) => {
     const _id = req.params.id
