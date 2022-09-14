@@ -8,6 +8,20 @@ const courseSchema = new mongoose.Schema({
         trim: true,
 
     },
+    lowTheoryBound:{
+        type: Number,
+        default: 5
+    },
+    lowLabBound: {
+        type: Number,
+        default: 5
+    },
+    theoryWeight: {
+        type: Number
+    },
+    labWeight: {
+        type: Number
+    },
     gradeMaintainTime: {
         type: Number,
         required: true,

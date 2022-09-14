@@ -23,6 +23,52 @@
 
             <form id="update-form">
                 <div class="form-group">
+                    <div class="row">
+                        <div class="col-6">
+                            <h1>General</h1>
+                        </div>
+                    </div>
+                    <table class="table table-bordered" id="childTable3">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th scope="col">Name </th>
+                                <th scope="col">Weight </th>
+                                <th scope="col">Edit Weight</th>
+                                <th scope="col">Low Bound</th>
+                                <th scope="col">Edit Bound</th>
+
+                            </tr>
+                            <tr>
+
+                                <th scope="row">Theory</th>
+                                <td>{{generalTheoryWeight}} </td>
+                                <td> <input type="text" id="generalTheoryWeightInput" class="form-control3"> </td>
+                                <td> {{lowTheoryBound}}</td>
+                                <td> <input type="text" id="lowTheoryBoundInput" class="form-control4"> </td>
+
+                            </tr>
+                            <tr>
+                                <th scope="row">Lab</th>
+                                <td>{{generalLabWeight}} </td>
+                                <td> <input type="text" id="generalLabWeightInput" class="form-control5"> </td>
+                                <td> {{lowLabBound}}</td>
+                                <td> <input type="text" id="lowLabBoundInput" class="form-control6"> </td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{!-- {{#each arr}}
+
+                            <tr>
+                                <td>{{id}} <class="form-control1">
+                                        </class>
+
+                                <td> <input type="text" id="theoryGrade" class="form-control1"> </td>
+                                <td> <input type="text" id="theoryGrade" class="form-control1"> </td>
+                                <td> {{compTheoryGrade}}</td>
+                                <td> <input type="text" id="theoryGrade" class="form-control1"> </td>
+                            </tr>
+                            {{/each}} --}}
+                    </table>
 
                     <body>
                         <div class="row">
@@ -127,6 +173,10 @@
                     var data = {}
                     var theory = []
                     var lab = []
+                    var editGeneralTheoryWeight 
+                    var editGeneralLabWeight
+                    var editGeneralTheoryBound
+                    var editGeneralLabBound
 
                     $('.form-control1').each(function () {
 
@@ -151,20 +201,46 @@
                         }
                     });
 
+                    $('.form-control3').each(function () {
+                        var textVal3 = $(this).val();
+                        console.log(textVal3)
+                        if (textVal3 != 0) {
+                            editGeneralTheoryWeight = textVal3
+                        }
+                    });
+
+                    $('.form-control4').each(function () {
+                        var textVal4 = $(this).val();
+                        if (textVal4 != 0) {
+                            editGeneralTheoryBound = textVal4
+                        }
+                    });
+                    $('.form-control5').each(function () {
+                        var textVal5 = $(this).val();
+                        if (textVal5 != 0) {
+                            editGeneralLabWeight = textVal5
+                        }
+                    });
+                    $('.form-control6').each(function () {
+                        var textVal6 = $(this).val();
+                        if (textVal6 != 0) {
+                            editGeneralLabBound = textVal6
+                        }
+                    });
+                    
+                    
                     var counterLab = 0;
                     for (var x = 0; x < idsLab.length; x++) {
                         lab.splice(counterLab, 0, idsLab[x])
                         counterLab = counterLab + 3
                     }
 
-                    if (lab.length == 0 && document.getElementById("childTable2").rows.length == 0) {
-                        data = { theory }
+                    if (lab.length == 0 && document.getElementById("childTable2").rows.length == 0) {//no lab and no general
+                        data = { theory, editGeneralTheoryWeight, editGeneralLabWeight }
                     } else {
-                        data = { theory, lab }
+                        data = { theory, lab, editGeneralTheoryWeight, editGeneralLabWeight,editGeneralTheoryBound, editGeneralLabBound } //all
                     }
-
-                    console.log(data);
-
+                    console.log(data)
                     $.ajax({
                         url: window.location.pathname,
                         type: "PATCH",

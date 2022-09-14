@@ -151,7 +151,11 @@ router.get('/course/edit/:id', auth, async (req, res) => {
         theoryWeights = course.theory.weight
 
         labIDs = course.lab.id
-        // console.log( labIDs,theoryIDs)
+        generalTheoryWeight = course.theoryWeight
+        generalLabWeight = course.labWeight
+        lowTheoryBound = course.lowTheoryBound
+        lowLabBound = course.lowLabBound
+        // console.log(generalTheoryWeight)
         lab = course.lab.names
         labWeights = course.lab.weight
         arr = [];
@@ -176,7 +180,10 @@ router.get('/course/edit/:id', auth, async (req, res) => {
         if (!course) {
             return res.status(404).send()
         }
-        res.render('editCourse', { arr: arr, arr2: arr2 })
+        res.render('editCourse', {
+            arr: arr, arr2: arr2, generalTheoryWeight: generalTheoryWeight, generalLabWeight: generalLabWeight,
+            lowTheoryBound: lowTheoryBound, lowLabBound: lowLabBound
+        })
     } catch (e) {
         res.status(500).send()
     }
@@ -188,72 +195,105 @@ router.patch('/course/edit/:id', auth, async (req, res) => {
 
     try {
 
-        // console.log(req.body.theory.length, req.body.lab)
+        theoryNames = DBnames(req.body.theory)
+        theoryWeights = DBweights(req.body.theory)
+        theoryIds = DbIds(req.body.theory)
 
-        const course = {}
-        if (req.body.theory && req.body.lab) {
+        labNames = DBnames(req.body.lab)
+        labWeights = DBweights(req.body.lab)
+        labIds = DbIds(req.body.lab)
 
-            theoryNames = DBnames(req.body.theory)
-            theoryWeights = DBweights(req.body.theory)
-            theoryIds = DbIds(req.body.theory)
-            labNames = DBnames(req.body.lab)
-            labWeights = DBweights(req.body.lab)
-            labIds = DbIds(req.body.lab)
-            // console.log(theoryIds, theoryNames,theoryWeights,labIds,labNames,labWeights)
-            course = Course.findByIdAndUpdate(
-                req.params.id,
-                { $push: { "theory.id": theoryIds, "theory.names": theoryNames, "theory.weight": theoryWeights, "lab.id": labIds, "lab.names": labNames, "lab.weight": labWeights } },
-                { safe: true, upsert: true },
-                function (err, model) {
-                    if (model) {
-
-                        return res.status(200).send({ result: 'redirect', url: '/course/edit/' + req.params.id })
-                    }
-                }
-            );
-        } else if (!(req.body.lab)) {
-            theoryNames = DBnames(req.body.theory)
-            theoryWeights = DBweights(req.body.theory)
-            theoryIds = DbIds(req.body.theory)
-            // console.log(req.body.theory, theoryIds, theoryNames,theoryWeights)
-            course = Course.findByIdAndUpdate(
-                req.params.id,
-                { $push: { "theory.id": theoryIds, "theory.names": theoryNames, "theory.weight": theoryWeights } },
-                { safe: true, upsert: true },
-                function (err, model) {
-                    if (model) {
-
-                        return res.status(200).send({ result: 'redirect', url: '/course/edit/' + req.params.id })
-                    }
-                }
-            );
-        } else if (!(req.body.theory)) {
-            labNames = DBnames(req.body.lab)
-            labWeights = DBweights(req.body.lab)
-            labIds = DbIds(req.body.lab)
-            // console.log(req.body.theory, theoryIds, theoryNames,theoryWeights)
-            course = Course.findByIdAndUpdate(
-                req.params.id,
-                { $push: { "lab.id": labIds, "lab.names": labNames, "lab.weight": labWeights } },
-                { safe: true, upsert: true },
-                function (err, model) {
-                    if (model) {
-
-                        return res.status(200).send({ result: 'redirect', url: '/course/edit/' + req.params.id })
-                    }
-                }
-            );
+        editGeneralLabBound = req.body.editGeneralLabBound
+        editGeneralLabWeight = req.body.editGeneralLabWeight
+        editGeneralTheoryBound = req.body.editGeneralTheoryBound
+        editGeneralTheoryWeight = req.body.editGeneralTheoryWeight
+        params = {
+            theory: {
+                id: theoryIds,
+                names: theoryNames,
+                weight: theoryWeights
+            },
+            lab: {
+                id: labIds,
+                names: labNames,
+                weight: labWeights
+            },
+            lowTheoryBound: editGeneralTheoryBound,
+            lowLabBound: editGeneralLabBound,
+            theoryWeight: editGeneralTheoryWeight,
+            labWeight: editGeneralLabWeight
         }
+
+        let updateObj = {};
+        for (let [key, value] of Object.entries(params)) {
+            if (value !== undefined) {
+                updateObj[key] = value;
+            }
+        }
+        
+        if (updateObj.theory.names.length == 0 && updateObj.theory.weight.length == 0) {
+            delete updateObj.theory
+        }
+        if (updateObj.lab.names.length == 0 && updateObj.lab.weight.length == 0) {
+            delete updateObj.lab
+        }
+        
+        var course = await Course.findById({ _id: req.params.id })
+        
+        course = course.toObject()
+        let obj = Object.assign(course);
+
+        
+        if (!updateObj.lowLabBound) {
+            updateObj.lowLabBound = course.lowLabBound
+        }
+        if (!updateObj.lowTheoryBound) {
+            updateObj.lowTheoryBound = course.lowTheoryBound
+        }
+
+        if (!updateObj.theoryWeight) {
+            updateObj.theoryWeight = course.theoryWeight
+        }
+
+        if (!updateObj.labWeight) {
+            updateObj.labWeight = course.labWeight
+        }
+        
+        if (updateObj.theory) {
+
+            for (var i = 0; i < updateObj.theory.id.length; i++) {
+                
+                obj.theory.id.push(updateObj.theory.id[i])
+                obj.theory.names.push(updateObj.theory.names[i])
+                obj.theory.weight.push(updateObj.theory.weight[i])
+            }
+        }
+        if (updateObj.lab) {
+
+            for (var i = 0; i < updateObj.lab.id.length; i++) {
+                
+                obj.lab.id.push(updateObj.lab.id[i])
+                obj.lab.names.push(updateObj.lab.names[i])
+                obj.lab.weight.push(updateObj.lab.weight[i])
+            }
+        }
+
+        var course2 = await Course.findOneAndUpdate({ _id: req.params.id }, obj,function (err, model) {
+            if (model) {
+
+                return res.status(200).send({ result: 'redirect', url: '/course/edit/' + req.params.id })
+            }
+        });
 
         if (!course) {
-            // return res.status(404).send()
+            return res.status(404).send()
 
-            console.log(course)
+            // console.log(course)
         }
 
-        res.redirect('/course/edit/' + req.params.id)
+        // res.redirect('/course/edit/' + req.params.id)
     } catch (e) {
-        // res.status(400).send(e)
+        res.status(400).send(e)
 
     }
 
@@ -354,26 +394,44 @@ router.post('/course/delete/:id', auth, async (req, res) => {
 function DBnames(arr1) {
     // console.log('fun names')
     names = []
-    for (var i = 1; i < arr1.length; i += 3) {
-        names.push(arr1[i])
+    if (arr1 == undefined) {
+        names = []
+    } else {
+        for (var i = 1; i < arr1.length; i += 3) {
+            names.push(arr1[i])
+        }
     }
+
+
+
     return names
 }
 function DBweights(arr1) {
     // console.log('fun weights')
     weights = []
-    for (var i = 2; i < arr1.length; i += 3) {
-        weights.push(arr1[i])
+    if (arr1 == undefined) {
+        weights = []
+    } else {
+        for (var i = 2; i < arr1.length; i += 3) {
+            weights.push(arr1[i])
+        }
     }
+
     return weights
 }
 
 function DbIds(arr1) {
     // console.log('fun ids')
     ids = []
-    for (var i = 0; i < arr1.length; i += 3) {
-        ids.push(arr1[i])
+    if (arr1 == undefined) {
+        ids = []
+    } else {
+        for (var i = 0; i < arr1.length; i += 3) {
+            ids.push(arr1[i])
+        }
+
     }
+
     return ids
 }
 

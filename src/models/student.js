@@ -9,6 +9,10 @@ const studentSchema = new mongoose.Schema({
         required: false,
         trim: true
     },
+    AM:{
+        type: String,
+        trim: true
+    },
     email: {
         type: String,
         required: false
