@@ -230,7 +230,7 @@ router.patch('/course/edit/:id', auth, async (req, res) => {
                 updateObj[key] = value;
             }
         }
-        
+        console.log(updateObj.lab)
         if (updateObj.theory.names.length == 0 && updateObj.theory.weight.length == 0) {
             delete updateObj.theory
         }
@@ -254,9 +254,11 @@ router.patch('/course/edit/:id', auth, async (req, res) => {
         if (!updateObj.theoryWeight) {
             updateObj.theoryWeight = course.theoryWeight
         }
-
+        console.log(updateObj.labWeight)
         if (!updateObj.labWeight) {
             updateObj.labWeight = course.labWeight
+        }else if (updateObj.labWeight==0){
+            updateObj.labWeight = 0
         }
         
         if (updateObj.theory) {
@@ -278,6 +280,9 @@ router.patch('/course/edit/:id', auth, async (req, res) => {
             }
         }
 
+        obj.theoryWeight = updateObj.theoryWeight
+        obj.labWeight = updateObj.labWeight
+        // console.log(updateObj)
         var course2 = await Course.findOneAndUpdate({ _id: req.params.id }, obj,function (err, model) {
             if (model) {
 

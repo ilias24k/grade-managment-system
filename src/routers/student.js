@@ -27,7 +27,7 @@ router.get('/download/analytical/:id', async function (req, res) {
     }
 
     const course = await Course.findById(req.params.id)
-    console.log(course)
+    // console.log(course)
     CourseStudents = course.students
     const students = await Student.find({ '_id': { $in: CourseStudents } });
     studentslist = []
@@ -109,7 +109,14 @@ router.get('/download/analytical/:id', async function (req, res) {
 
         worksheet.getCell('L' + (i + 3)).value = students[i].finalGradeTh
         worksheet.getCell('M' + (i + 3)).value = students[i].finalGradeLab
-        worksheet.getCell('N' + (i + 3)).value = (students[i].finalGradeTh + students[i].finalGradeLab) / 2
+
+        if (students[i].finalGradeLab < course.lowLabBound || students[i].finalGradeTheory < course.lowTheoryBound) {
+            worksheet.getCell('N' + (i + 3)).value = Math.min(students[i].finalGradeTh * course.theoryWeight / 100, students[i].finalGradeLab * course.labWeight / 100)
+        }else {
+            worksheet.getCell('N' + (i + 3)).value = students[i].finalGradeTh * course.theoryWeight / 100 + students[i].finalGradeLab * course.labWeight / 100
+        }
+
+        
 
     }
 
@@ -140,16 +147,25 @@ router.get('/download/typical/:id', async function (req, res) {
 
     studentslist = []
 
+
     for (var i = 0; i < students.length; i++) {
         obj = {}
         obj.name = students[i].name
         obj.email = students[i].email
         obj.finalGradeTheory = students[i].finalGradeTh
         obj.finalGradeLab = students[i].finalGradeLab
-        obj.total = (students[i].finalGradeTh + students[i].finalGradeLab) / 2 // total is medium of both grades
+
+        if (students[i].finalGradeLab < course.lowLabBound || students[i].finalGradeTheory < course.lowTheoryBound) {
+            obj.total = Math.min(students[i].finalGradeTh * course.theoryWeight / 100, students[i].finalGradeLab * course.labWeight / 100)
+        }else {
+            obj.total = students[i].finalGradeTh * course.theoryWeight / 100 + students[i].finalGradeLab * course.labWeight / 100
+        }
+
+
+        // obj.total = Math.min(students[i].finalGradeTh * course.theoryWeight / 100, students[i].finalGradeLab * course.labWeight / 100)  // total is medium of both grades
         studentslist.push(obj)
     }
-    // console.log(studentslist)
+    console.log(studentslist)
 
     let binaryWS = xlsx.utils.json_to_sheet(studentslist);
     var wb = xlsx.utils.book_new()
@@ -228,7 +244,7 @@ async function uploadFiles(req, res) {
     res.send()
 }
 // getting all students of all courses
-router.get('/student',auth, async (req, res) => {
+router.get('/student', auth, async (req, res) => {
 
     try {
         const students = await Student.find({})
@@ -242,7 +258,7 @@ router.get('/student',auth, async (req, res) => {
 
 })
 
-router.get('/student/:id', auth,async (req, res) => {
+router.get('/student/:id', auth, async (req, res) => {
     const _id = req.params.id
 
     try {
@@ -257,7 +273,7 @@ router.get('/student/:id', auth,async (req, res) => {
 
 })
 
-router.get('/student/edit/:id', auth,async (req, res) => {
+router.get('/student/edit/:id', auth, async (req, res) => {
 
     try {
         // const student = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
@@ -307,7 +323,7 @@ router.get('/student/edit/:id', auth,async (req, res) => {
 //grading students
 
 
-router.put('/student/edit/:id', auth,async (req, res) => {
+router.put('/student/edit/:id', auth, async (req, res) => {
 
     try {
 
@@ -417,7 +433,7 @@ router.put('/student/edit/:id', auth,async (req, res) => {
 
 //deleting students
 
-router.post('/student/delete/:id',auth, async (req, res) => {
+router.post('/student/delete/:id', auth, async (req, res) => {
     try {
         //checking header and  referer for redirecting purposes
 
@@ -426,14 +442,14 @@ router.post('/student/delete/:id',auth, async (req, res) => {
 
         if (header == 'http://localhost:4000/student') {
             courseId = null
-            
+
         } else {
             courseId = req.headers.referer.split('/')[4].slice(0, -1)
-           
+
         }
 
         if (courseId != null) {
-            
+
             Student.findOneAndDelete({ _id: req.params.id })
                 .exec(function (err, removed) {
                     Course.findOneAndUpdate(
@@ -447,7 +463,7 @@ router.post('/student/delete/:id',auth, async (req, res) => {
                 })
             res.redirect('/course/' + courseId);
         } else {
-            
+
             Student.findOneAndDelete({ _id: req.params.id })
                 .exec(function (err, removed) {
                     Course.findOneAndUpdate(

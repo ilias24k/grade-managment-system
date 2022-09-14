@@ -204,8 +204,12 @@
                     $('.form-control3').each(function () {
                         var textVal3 = $(this).val();
                         console.log(textVal3)
-                        if (textVal3 != 0) {
+                        if (textVal3 !== undefined) {
                             editGeneralTheoryWeight = textVal3
+                            
+                        }else if (textVal3 === null){
+                            editGeneralTheoryWeight = 0
+                            
                         }
                     });
 
@@ -217,8 +221,10 @@
                     });
                     $('.form-control5').each(function () {
                         var textVal5 = $(this).val();
-                        if (textVal5 != 0) {
+                        if (textVal5 !== undefined) {
                             editGeneralLabWeight = textVal5
+                        }else if(textVal5 === null){
+                            editGeneralLabWeight = 0
                         }
                     });
                     $('.form-control6').each(function () {
