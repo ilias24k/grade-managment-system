@@ -121,9 +121,7 @@ router.get('/download/analytical/:id', async function (req, res) {
             total_grade = await Student.findByIdAndUpdate({_id: students[i]._id},{  $set:  {
                 "totalGrade": Grade2 }})
         }
-
         
-
     }
 
     workbook.xlsx.writeFile('analytical/analytical.xlsx')
@@ -187,7 +185,6 @@ router.get('/download/typical/:id', async function (req, res) {
 
     res.download(file);
 });
-
 
 
 // upload students
