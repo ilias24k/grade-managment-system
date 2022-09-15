@@ -102,7 +102,7 @@ router.get('/download/analytical/:id', async function (req, res) {
     worksheet.getCell('N' + 1).value = 'total '
 
     counterTheory = 4;
-
+    var total_grade
     for (var i = 0; i < students.length; i++) {
         worksheet.getCell('A' + (i + 3)).value = students[i].name
         worksheet.getCell('B' + (i + 3)).value = students[i].email
@@ -111,9 +111,15 @@ router.get('/download/analytical/:id', async function (req, res) {
         worksheet.getCell('M' + (i + 3)).value = students[i].finalGradeLab
 
         if (students[i].finalGradeLab < course.lowLabBound || students[i].finalGradeTheory < course.lowTheoryBound) {
-            worksheet.getCell('N' + (i + 3)).value = Math.min(students[i].finalGradeTh * course.theoryWeight / 100, students[i].finalGradeLab * course.labWeight / 100)
+            var Grade1 =  Math.min(students[i].finalGradeTh * course.theoryWeight / 100, students[i].finalGradeLab * course.labWeight / 100)
+            worksheet.getCell('N' + (i + 3)).value =Grade1
+            total_grade =  await Student.findByIdAndUpdate({_id: students[i]._id},{  $set:  {
+                "totalGrade": Grade1 }})
         }else {
-            worksheet.getCell('N' + (i + 3)).value = students[i].finalGradeTh * course.theoryWeight / 100 + students[i].finalGradeLab * course.labWeight / 100
+            var Grade2 = students[i].finalGradeTh * course.theoryWeight / 100 + students[i].finalGradeLab * course.labWeight / 100
+            worksheet.getCell('N' + (i + 3)).value = Grade2
+            total_grade = await Student.findByIdAndUpdate({_id: students[i]._id},{  $set:  {
+                "totalGrade": Grade2 }})
         }
 
         
@@ -146,8 +152,8 @@ router.get('/download/typical/:id', async function (req, res) {
     const students = await Student.find({ '_id': { $in: CourseStudents } });
 
     studentslist = []
-
-
+    // console.log(students)
+    var  total_grade
     for (var i = 0; i < students.length; i++) {
         obj = {}
         obj.name = students[i].name
@@ -162,10 +168,12 @@ router.get('/download/typical/:id', async function (req, res) {
         }
 
 
-        // obj.total = Math.min(students[i].finalGradeTh * course.theoryWeight / 100, students[i].finalGradeLab * course.labWeight / 100)  // total is medium of both grades
+       total_grade = await Student.findByIdAndUpdate({_id: students[i]._id},{  $set:  {
+                     "totalGrade": obj.total }})
         studentslist.push(obj)
     }
-    console.log(studentslist)
+    
+    // console.log(total_grade)
 
     let binaryWS = xlsx.utils.json_to_sheet(studentslist);
     var wb = xlsx.utils.book_new()

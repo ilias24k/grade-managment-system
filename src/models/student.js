@@ -33,6 +33,10 @@ const studentSchema = new mongoose.Schema({
         type: Number,
         required: false
     },
+    totalGrade:{
+        type: Number,
+        required: false
+    },
     
 }, { timestamps: true })
 
