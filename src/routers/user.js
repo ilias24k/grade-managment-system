@@ -17,7 +17,7 @@ router.get('/users/signup', async (req, res) => {
 })
 router.post('/users/signup', async (req, res) => {
     const user = new User(req.body)
-    console.log(user)
+    // console.log(user)
     try {
         await user.save()
         const token = await user.generateAuthToken()
@@ -59,7 +59,7 @@ router.post('/users/login', async (req, res) => {
 router.post('/users/logout', auth, async (req, res) => {
 
     try {
-        console.log(req.cookie)
+        // console.log(req.cookie)
         req.user.tokens = req.user.tokens.filter((token) => {
 
             res.clearCookie('cookie name')

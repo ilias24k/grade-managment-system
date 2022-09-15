@@ -181,7 +181,7 @@ router.get('/download/typical/:id', async function (req, res) {
     const fileLoc = path.join(__dirname, '../../typical/typical.xlsx')
 
     const file = fileLoc;
-    console.log(file)
+    // console.log(file)
 
     res.download(file);
 });
@@ -357,7 +357,7 @@ router.put('/student/edit/:id', auth, async (req, res) => {
                 finalGradLab += gradeLab[i]
             }
 
-            console.log(finalGradTheory, finalGradLab)
+            // console.log(finalGradTheory, finalGradLab)
             student = Student.findByIdAndUpdate(
                 req.params.id,
                 { $set: { "theoryGrade.name": TheoryNames, "theoryGrade.computedGrade": gradeTheory, "finalGradeTh": finalGradTheory, "labGrade.name": LabNames, "labGrade.computedGrade": gradeLab, "finalGradeLab": finalGradLab } },
@@ -426,7 +426,7 @@ router.put('/student/edit/:id', auth, async (req, res) => {
         if (!student) {
             // return res.status(404).send()
 
-            console.log(student)
+            // console.log(student)
         }
 
     } catch (e) {

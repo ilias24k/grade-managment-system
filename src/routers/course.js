@@ -254,7 +254,7 @@ router.patch('/course/edit/:id', auth, async (req, res) => {
         if (!updateObj.theoryWeight) {
             updateObj.theoryWeight = course.theoryWeight
         }
-        console.log(updateObj.labWeight)
+        // console.log(updateObj.labWeight)
         if (!updateObj.labWeight) {
             updateObj.labWeight = course.labWeight
         }else if (updateObj.labWeight==0){
