@@ -106,22 +106,34 @@ router.get('/download/analytical/:id', async function (req, res) {
     for (var i = 0; i < students.length; i++) {
         worksheet.getCell('A' + (i + 3)).value = students[i].name
         worksheet.getCell('B' + (i + 3)).value = students[i].email
-
+        if (students[i].finalGradeTh === undefined) {
+            students[i].finalGradeTh = 0
+        }
+        if (students[i].finalGradeLab === undefined) {
+            students[i].finalGradeLab = 0
+        }
         worksheet.getCell('L' + (i + 3)).value = students[i].finalGradeTh
         worksheet.getCell('M' + (i + 3)).value = students[i].finalGradeLab
 
+
         if (students[i].finalGradeLab < course.lowLabBound || students[i].finalGradeTheory < course.lowTheoryBound) {
-            var Grade1 =  Math.min(students[i].finalGradeTh * course.theoryWeight / 100, students[i].finalGradeLab * course.labWeight / 100)
-            worksheet.getCell('N' + (i + 3)).value =Grade1
-            total_grade =  await Student.findByIdAndUpdate({_id: students[i]._id},{  $set:  {
-                "totalGrade": Grade1 }})
-        }else {
+            var Grade1 = Math.min(students[i].finalGradeTh * course.theoryWeight / 100, students[i].finalGradeLab * course.labWeight / 100)
+            worksheet.getCell('N' + (i + 3)).value = Grade1
+            total_grade = await Student.findByIdAndUpdate({ _id: students[i]._id }, {
+                $set: {
+                    "totalGrade": Grade1
+                }
+            })
+        } else {
             var Grade2 = students[i].finalGradeTh * course.theoryWeight / 100 + students[i].finalGradeLab * course.labWeight / 100
             worksheet.getCell('N' + (i + 3)).value = Grade2
-            total_grade = await Student.findByIdAndUpdate({_id: students[i]._id},{  $set:  {
-                "totalGrade": Grade2 }})
+            total_grade = await Student.findByIdAndUpdate({ _id: students[i]._id }, {
+                $set: {
+                    "totalGrade": Grade2
+                }
+            })
         }
-        
+
     }
 
     workbook.xlsx.writeFile('analytical/analytical.xlsx')
@@ -151,26 +163,35 @@ router.get('/download/typical/:id', async function (req, res) {
 
     studentslist = []
     // console.log(students)
-    var  total_grade
+    var total_grade
     for (var i = 0; i < students.length; i++) {
         obj = {}
         obj.name = students[i].name
         obj.email = students[i].email
+
+        if (students[i].finalGradeTh === undefined) {
+            students[i].finalGradeTh = 0
+        }
+        if (students[i].finalGradeLab === undefined) {
+            students[i].finalGradeLab = 0
+        }
         obj.finalGradeTheory = students[i].finalGradeTh
         obj.finalGradeLab = students[i].finalGradeLab
-
         if (students[i].finalGradeLab < course.lowLabBound || students[i].finalGradeTheory < course.lowTheoryBound) {
             obj.total = Math.min(students[i].finalGradeTh * course.theoryWeight / 100, students[i].finalGradeLab * course.labWeight / 100)
-        }else {
+        } else {
             obj.total = students[i].finalGradeTh * course.theoryWeight / 100 + students[i].finalGradeLab * course.labWeight / 100
         }
 
 
-       total_grade = await Student.findByIdAndUpdate({_id: students[i]._id},{  $set:  {
-                     "totalGrade": obj.total }})
+        total_grade = await Student.findByIdAndUpdate({ _id: students[i]._id }, {
+            $set: {
+                "totalGrade": obj.total
+            }
+        })
         studentslist.push(obj)
     }
-    
+
     // console.log(total_grade)
 
     let binaryWS = xlsx.utils.json_to_sheet(studentslist);
@@ -340,6 +361,7 @@ router.put('/student/edit/:id', auth, async (req, res) => {
             labGrade = DbGrade(req.body.lab)
             TheoryNames = DbNames(course[0].theory.names)
             LabNames = DbNames(course[0].lab.names)
+
             const student = {}
 
             gradeTheory = []
@@ -348,16 +370,30 @@ router.put('/student/edit/:id', auth, async (req, res) => {
             var finalGradLab = 0;
 
             for (var i = 0; i < theoryGradeIds.length; i++) {
-                gradeTheory[i] = (theoryGrade[i] * course[0].theory.weight[i]) / 100
+
+                if (theoryGrade[i] >= course[0].theoryBounds.bound[i]) {
+                    gradeTheory[i] = theoryGrade[i] * course[0].theory.weight[i] / 100
+
+                } else {
+                    gradeTheory[i] = 0
+                    // finalGradTheory += gradeTheory[i]                    
+                }
                 finalGradTheory += gradeTheory[i]
             }
-
+            // console.log('thewria ', gradeTheory, finalGradTheory)
+            // console.log(course[0].lab.weight, labGrade, course[0].labBounds)
             for (var i = 0; i < labGradeIds.length; i++) {
-                gradeLab[i] = (labGrade[i] * course[0].lab.weight[i]) / 100
+
+                if (labGrade[i] >= course[0].labBounds.bound[i]) {
+                    gradeLab[i] = labGrade[i] * course[0].lab.weight[i] / 100
+
+                } else {
+                    gradeLab[i] = 0
+                    // finalGradTheory += gradeTheory[i]                    
+                }
                 finalGradLab += gradeLab[i]
             }
-
-            // console.log(finalGradTheory, finalGradLab)
+           
             student = Student.findByIdAndUpdate(
                 req.params.id,
                 { $set: { "theoryGrade.name": TheoryNames, "theoryGrade.computedGrade": gradeTheory, "finalGradeTh": finalGradTheory, "labGrade.name": LabNames, "labGrade.computedGrade": gradeLab, "finalGradeLab": finalGradLab } },
@@ -381,7 +417,14 @@ router.put('/student/edit/:id', auth, async (req, res) => {
             var finalGradTheory = 0;
 
             for (var i = 0; i < theoryGradeIds.length; i++) {
-                gradeTheory[i] = theoryGrade[i] * course[0].theory.weight[i] / 100
+
+                if (theoryGrade[i] >= course[0].theoryBounds.bound[i]) {
+                    gradeTheory[i] = theoryGrade[i] * course[0].theory.weight[i] / 100
+
+                } else {
+                    gradeTheory[i] = 0
+                    // finalGradTheory += gradeTheory[i]                  
+                }
                 finalGradTheory += gradeTheory[i]
             }
 
@@ -406,8 +449,16 @@ router.put('/student/edit/:id', auth, async (req, res) => {
             LabNames = DbNames(course[0].lab.names)
             var finalGradLab = 0;
             gradeLab = []
+           
             for (var i = 0; i < labGradeIds.length; i++) {
-                gradeLab[i] = (labGrade[i] * course[0].lab.weight[i]) / 100
+
+                if (labGrade[i] >= course[0].labBounds.bound[i]) {
+                    gradeLab[i] = labGrade[i] * course[0].lab.weight[i] / 100
+
+                } else {
+                    gradeLab[i] = 0
+                    // finalGradTheory += gradeTheory[i]                    
+                }
                 finalGradLab += gradeLab[i]
             }
             student = Student.findByIdAndUpdate(
@@ -422,7 +473,6 @@ router.put('/student/edit/:id', auth, async (req, res) => {
                 }
             );
         }
-
         if (!student) {
             // return res.status(404).send()
 
@@ -450,7 +500,6 @@ router.post('/student/delete/:id', auth, async (req, res) => {
 
         } else {
             courseId = req.headers.referer.split('/')[4].slice(0, -1)
-
         }
 
         if (courseId != null) {
@@ -482,7 +531,6 @@ router.post('/student/delete/:id', auth, async (req, res) => {
                 })
             res.redirect('/student/');
         }
-
 
     } catch (e) {
         res.status(500).send()

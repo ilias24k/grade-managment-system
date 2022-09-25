@@ -31,18 +31,24 @@ const courseSchema = new mongoose.Schema({
     remainingTime: {
         type: Number,
         required: false,
-
-
     },
     theory: {
         id: [Number],
         names: [String],
-        weight: [Number]
+        weight: [Number]        
     },
     lab: {
         id: [Number],
         names: [String],
-        weight: [Number]
+        weight: [Number]       
+    },
+    theoryBounds:{
+        id: [Number],
+        bound: [Number]
+    },
+    labBounds:{
+        id: [Number],
+        bound: [Number]
     },
     students: [{
         type: mongoose.Schema.Types.ObjectId,

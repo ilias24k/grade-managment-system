@@ -56,18 +56,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {{!-- {{#each arr}}
 
-                            <tr>
-                                <td>{{id}} <class="form-control1">
-                                        </class>
-
-                                <td> <input type="text" id="theoryGrade" class="form-control1"> </td>
-                                <td> <input type="text" id="theoryGrade" class="form-control1"> </td>
-                                <td> {{compTheoryGrade}}</td>
-                                <td> <input type="text" id="theoryGrade" class="form-control1"> </td>
-                            </tr>
-                            {{/each}} --}}
                     </table>
 
                     <body>
@@ -82,6 +71,8 @@
                                     <th scope="col">Id </th>
                                     <th scope="col">name </th>
                                     <th scope="col">weight</th>
+                                    <th scope="col">bound</th>
+                                    <th scope="col">edit bound</th>
                                     <th scope="col" class="text-end">action</th>
                                 </tr>
                             </thead>
@@ -96,6 +87,9 @@
                                     </td>
                                     <td>{{weight}} <id="theoryWeight" class="form-control1">
                                     </td>
+                                    <td>{{bound}} <id="theoryBound" class="form-control1">
+                                    </td>
+                                    <td> <input type="text" id="boundTh" class="form-control7"> </td>
                                     <td class="text-end">
                                         <button <button class="btn btn-outline-danger"><i class="bi bi-x"></i>
                                             <i onclick="sent('{{name}}', {{id}}, {{weight}})">Delete</button>
@@ -116,6 +110,8 @@
                                     <th scope="col">Id </th>
                                     <th scope="col">name </th>
                                     <th scope="col">weight</th>
+                                    <th scope="col">bound</th>
+                                    <th scope="col">edit bound</th>
                                     <th scope="col" class="text-end">action</th>
                                 </tr>
                             </thead>
@@ -129,6 +125,9 @@
                                     </td>
                                     <td>{{weight}} <id="labWeight" class="form-control2">
                                     </td>
+                                    <td>{{bound}} <id="labBound" class="form-control1">
+                                    </td>
+                                    <td> <input type="text" id="boundLab" class="form-control8">
                                     <td class="text-end">
                                         <button class="btn btn-outline-danger"><i class="bi bi-x"></i>
                                             <i onclick="sent2('{{name}}', {{id}}, {{weight}})">Delete
@@ -173,10 +172,31 @@
                     var data = {}
                     var theory = []
                     var lab = []
-                    var editGeneralTheoryWeight 
+                    var editGeneralTheoryWeight
                     var editGeneralLabWeight
                     var editGeneralTheoryBound
                     var editGeneralLabBound
+                    var boundTh = []
+                    var boundLab = []
+                    var boundIds
+                    var boundIdsLab
+                  
+                    $('#childTable tbody tr').each(function (row, tr) {
+
+                        boundTh.push({
+                            emp_id: $(tr).find('td:eq(0)').text(),
+                            input_val: $(tr).find('input').val()
+                        });
+
+                    });
+                    $('#childTable2 tbody tr').each(function (row, tr) {
+
+                        boundLab.push({
+                            emp_id: $(tr).find('td:eq(0)').text(),
+                            input_val: $(tr).find('input').val()
+                        });
+
+                    });
 
                     $('.form-control1').each(function () {
 
@@ -203,13 +223,13 @@
 
                     $('.form-control3').each(function () {
                         var textVal3 = $(this).val();
-                        console.log(textVal3)
-                        if (textVal3 !== undefined) {
+                        
+                        if (textVal3 !== undefined && textVal3 !== '') {
                             editGeneralTheoryWeight = textVal3
-                            
-                        }else if (textVal3 === null){
+
+                        } else if (textVal3 === null) {
                             editGeneralTheoryWeight = 0
-                            
+
                         }
                     });
 
@@ -221,9 +241,9 @@
                     });
                     $('.form-control5').each(function () {
                         var textVal5 = $(this).val();
-                        if (textVal5 !== undefined) {
+                        if (textVal5 !== undefined && textVal5 !== '') {
                             editGeneralLabWeight = textVal5
-                        }else if(textVal5 === null){
+                        } else if (textVal5 === null) {
                             editGeneralLabWeight = 0
                         }
                     });
@@ -233,8 +253,24 @@
                             editGeneralLabBound = textVal6
                         }
                     });
-                    
-                    
+                    $('.form-control7').each(function () {
+                        var textVal7 = $(this).val();
+                        if (textVal7 !== undefined && textVal7 !== '') {
+                            boundTh.push(textVal7)
+                        } else if (textVal7 === null) {
+                            boundTh.push(0)
+                        }
+                    });
+                    $('.form-control8').each(function () {
+                        var textVal8 = $(this).val();
+                        if (textVal8 !== undefined && textVal8 !== '') {
+                            boundLab.push(textVal8)
+                        } else if (textVal8 === null) {
+                            boundLab.push(0)
+                        }
+                    });
+
+
                     var counterLab = 0;
                     for (var x = 0; x < idsLab.length; x++) {
                         lab.splice(counterLab, 0, idsLab[x])
@@ -242,11 +278,11 @@
                     }
 
                     if (lab.length == 0 && document.getElementById("childTable2").rows.length == 0) {//no lab and no general
-                        data = { theory, editGeneralTheoryWeight, editGeneralLabWeight }
+                        data = { theory, editGeneralTheoryWeight, editGeneralLabWeight, boundTh, boundLab }
                     } else {
-                        data = { theory, lab, editGeneralTheoryWeight, editGeneralLabWeight,editGeneralTheoryBound, editGeneralLabBound } //all
+                        data = { theory, lab, editGeneralTheoryWeight, editGeneralLabWeight, editGeneralTheoryBound, editGeneralLabBound, boundTh, boundLab } //all
                     }
-                    console.log(data)
+                    
                     $.ajax({
                         url: window.location.pathname,
                         type: "PATCH",
