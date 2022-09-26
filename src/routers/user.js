@@ -25,8 +25,8 @@ router.post('/users/signup', async (req, res) => {
         res.redirect('/users/login')             //redirect to main
 
     } catch (e) {
-
-        res.status(400).send(e)
+        res.status(400).redirect('/users/signup')
+        
     }
 
 })
