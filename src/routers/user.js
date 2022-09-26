@@ -51,7 +51,8 @@ router.post('/users/login', async (req, res) => {
         // res.send({ user, token })
         res.redirect('/course')
     } catch (e) {
-        res.status(400).send()
+        res.status(400).redirect('/users/login')
+        // res.status(400).send()
     }
 
 })
