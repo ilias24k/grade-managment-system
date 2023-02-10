@@ -9,7 +9,7 @@ const studentSchema = new mongoose.Schema({
         required: false,
         trim: true
     },
-    AM:{
+    AM: {
         type: String,
         trim: true
     },
@@ -17,9 +17,13 @@ const studentSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    frozen: {
+        theory: [Number],
+        lab: [Number]
+    },
     theoryGrade: {
         name: [String],
-        computedGrade: [Number]        
+        computedGrade: [Number]
     },
     finalGradeTh: {
         type: Number,
@@ -27,17 +31,20 @@ const studentSchema = new mongoose.Schema({
     },
     labGrade: {
         name: [String],
-        computedGrade: [Number]       
+        computedGrade: [Number]
     },
+    history: [{
+        type: mongoose.Mixed
+    }],
     finalGradeLab: {
         type: Number,
         required: false
     },
-    totalGrade:{
+    totalGrade: {
         type: Number,
         required: false
     },
-    
+
 }, { timestamps: true })
 
 

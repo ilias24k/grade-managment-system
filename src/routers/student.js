@@ -3,6 +3,8 @@ const Schema = require('mongoose')
 const Course = require('../models/course')
 const router = new express.Router()
 const Student = require('../models/student')
+const Teaching = require('../models/teaching')
+
 const fs = require('fs')
 const xlsx = require('xlsx')
 const multer = require('multer')
@@ -10,6 +12,7 @@ const { json } = require('body-parser')
 const path = require('path')
 const exceljs = require('exceljs')
 const auth = require('../middleware/auth')
+const async = require('hbs/lib/async')
 
 
 const upload = multer({
@@ -25,11 +28,16 @@ router.get('/download/analytical/:id', async function (req, res) {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
+    // console.log(req.params.id)
 
-    const course = await Course.findById(req.params.id)
+
+    const teaching = await Teaching.findById(req.params.id)
+
+    var course = await Course.findOne({ "teachings": req.params.id })
+
     // console.log(course)
-    CourseStudents = course.students
-    const students = await Student.find({ '_id': { $in: CourseStudents } });
+    TeachingStudents = teaching.students
+    const students = await Student.find({ '_id': { $in: TeachingStudents } });
     studentslist = []
     theoryNamesList = []
     theoryList = []
@@ -39,21 +47,37 @@ router.get('/download/analytical/:id', async function (req, res) {
     for (var i = 0; i < students.length - 1; i++) {
         theoryList.push(students[i].theoryGrade.computedGrade[i])
     }
-    // console.log(theoryList)
-    for (var i = 0; i < students[0].theoryGrade.name.length; i++) {
 
-        theoryNamesList.push(students[0].theoryGrade.name[i])
 
+    for (var i = 0; i < students.length; i++) {
+        if (students[i].theoryGrade.name.length > 0) {
+            for (var y = 0; y < students[i].theoryGrade.name.length; y++) {
+                theoryNamesList.push(students[i].theoryGrade.name[y])
+            }
+            break;
+        }
     }
+
+
+
+
+
     for (var i = 0; i < students.length; i++) {
         for (var y = 0; y < students[i].labGrade.computedGrade.length; y++) {
             labList.push(students[i].labGrade.computedGrade[y])
         }
     }
 
-    for (var i = 0; i < students[0].labGrade.name.length; i++) {
-        labNamesList.push(students[0].labGrade.name[i])
+    for (var i = 0; i < students.length; i++) {
+        if (students[i].labGrade.name.length > 0) {
+            for (var y = 0; y < students[i].labGrade.name.length; y++) {
+                labNamesList.push(students[i].labGrade.name[y])
+            }
+            break;
+        }
     }
+
+
 
     var workbook = new exceljs.Workbook();
     var sheet = workbook.addWorksheet('records');
@@ -134,7 +158,36 @@ router.get('/download/analytical/:id', async function (req, res) {
             })
         }
 
+
+
+        if (typeof students[i].finalGradeLab !== "undefined" && typeof students[i].finalGradeTh !== "undefined") {
+            await Student.findByIdAndUpdate({ _id: students[i]._id }, {
+                $set: {
+                    "frozen.theory": students[i].finalGradeTh, "frozen.lab": students[i].finalGradeLab
+                }
+            })
+
+        } else if (!students[i].finalGradeTh) {
+
+            await Student.findByIdAndUpdate({ _id: students[i]._id }, {
+                $set: {
+                    "frozen.lab": students[i].finalGradeLab
+                }
+            })
+
+        } else if (!students[i].finalGradeLab) {
+
+            await Student.findByIdAndUpdate({ _id: students[i]._id }, {
+                $set: {
+                    "frozen.theory": students[i].finalGradeTh
+                }
+            })
+
+        }
+
     }
+
+
 
     workbook.xlsx.writeFile('analytical/analytical.xlsx')
         .then(function () {
@@ -146,7 +199,7 @@ router.get('/download/analytical/:id', async function (req, res) {
 
 });
 
-// typical excel file
+// typical grade excel file
 
 router.get('/download/typical/:id', async function (req, res) {
     var fs = require('fs');
@@ -156,8 +209,9 @@ router.get('/download/typical/:id', async function (req, res) {
         fs.mkdirSync(dir);
     }
     // console.log(req.params.id)
-    const course = await Course.findById(req.params.id)
-    CourseStudents = course.students
+    const teaching = await Teaching.findById(req.params.id)
+    var course = await Course.findOne({ "teachings": teaching._id })
+    CourseStudents = teaching.students
 
     const students = await Student.find({ '_id': { $in: CourseStudents } });
 
@@ -190,6 +244,28 @@ router.get('/download/typical/:id', async function (req, res) {
             }
         })
         studentslist.push(obj)
+        if (typeof students[i].finalGradeLab !== "undefined" && typeof students[i].finalGradeTh !== "undefined") {
+            await Student.findByIdAndUpdate({ _id: students[i]._id }, {
+                $set: {
+                    "frozen.theory": students[i].finalGradeTh, "frozen.lab": students[i].finalGradeLab
+                }
+            })
+
+        } else if (!students[i].finalGradeTh) {
+            await Student.findByIdAndUpdate({ _id: students[i]._id }, {
+                $set: {
+                    "frozen.lab": students[i].finalGradeLab
+                }
+            })
+
+        } else if (!students[i].finalGradeLab) {
+            await Student.findByIdAndUpdate({ _id: students[i]._id }, {
+                $set: {
+                    "frozen.theory": students[i].finalGradeTh
+                }
+            })
+
+        }
     }
 
     // console.log(total_grade)
@@ -213,6 +289,7 @@ router.post('/upload_students', upload.single("files"), uploadFiles);
 async function uploadFiles(req, res) {
 
     try {
+
         const workbook = xlsx.readFile(req.file.path)
         var sheet_name_list = workbook.SheetNames;
         //convert xlsx to json
@@ -250,8 +327,8 @@ async function uploadFiles(req, res) {
             students.updatedAt;
 
             docs.forEach(function (docs) {
-                Course.findByIdAndUpdate(
-                    req.body.id,
+                Teaching.findByIdAndUpdate(
+                    req.body.teaching_id,
                     { $push: { "students": docs } },
                     { safe: true, upsert: true },
                     function (err, model) {
@@ -261,9 +338,10 @@ async function uploadFiles(req, res) {
             })
         });
 
+
         // await student.save()
-        res.status(201)
-        res.redirect('/course')
+        // res.status(201)
+        res.redirect('/course/view/teaching/' + req.body.teaching_id)
     } catch (e) {
         res.status(400).send(e)
     }
@@ -274,15 +352,153 @@ router.get('/student', auth, async (req, res) => {
 
     try {
         const students = await Student.find({})
+        var teachings = await Teaching.find({})
+        var courses = await Course.find({})
+        var teachingList = await Teaching.find({ "flag": false })
+
         var studentList = students
-        res.render('student', { studentList: studentList })
+        res.render('student', { studentList: studentList, teachingList: teachingList })
 
         // res.send(students)
     } catch (e) {
         res.status(500).send()
     }
+})
+
+
+router.patch('/students/upd/', auth, async (req, res) => {
+
+    try {
+        var index = req.body.index[0].index
+        var AM = req.body.rows[index].AM
+        var name = req.body.rows[index].name
+        var teachingYear = req.body.teachingYear
+        var teaching
+
+        var student = await Student.findOne({ AM: { $eq: AM } })
+
+        if (teachingYear == 'remove from current teaching') {
+            teaching = await Teaching.findOneAndUpdate({
+                "students": student.id
+            },
+                { $pull: { "students": student.id } },
+                { safe: true, upsert: true },
+                function (err, model) {
+                    // console.log();
+                })
+
+        } else {
+            teaching = await Teaching.findOneAndUpdate({ "year": teachingYear }, { $push: { students: student.id } })
+        }
+
+        res.status(201).send({ result: 'redirect', url: '/student' })
+
+    } catch (e) {
+        res.status(500).send()
+    }
+})
+
+
+router.get('/course/student/check/:id', auth, async (req, res) => {
+
+    try {
+        const selStudent = await Student.findById(req.params.id)
+
+        var years = Object.keys(Object.assign({}, ...selStudent.history))
+
+        var data = []
+        var object = {}
+        var semesterList = []
+        var theoryNames = []
+        var labNames = []
+        var teaching
+        var course
+        for (var i = 0; i < years.length; i++) {
+            teaching = await Teaching.findOne({ 'year': years[i], 'students': selStudent.id })
+            semesterList.push(teaching.semester)
+            course = await Course.findOne({ "teachings": teaching.id })
+            object = { "year": years[i], "semester": semesterList[i] }
+
+            if (theoryNames.length > 0) {
+
+            } else {
+                course.theory.names.forEach(element => {
+                    theoryNames.push(element)
+                });
+            }
+            if (labNames.length > 0) {
+
+            } else {
+                course.lab.names.forEach(element => {
+                    labNames.push(element)
+                });
+            }
+
+            var copy = selStudent.history.map(o => Object.assign({}, o))
+
+            for (var k = 0; k < selStudent.history.length; k++) {
+                for (var y = 0; y < theoryNames.length; y++) {
+                    if (years[i] == Object.keys(selStudent.history[k])) {
+                        Object.assign(object, { [theoryNames[y]]: copy[k][years[i]].theory[y] })
+                    }
+                }
+            }
+
+            for (var k = 0; k < selStudent.history.length; k++) {
+                for (var y = 0; y < labNames.length; y++) {
+                    if (years[i] == Object.keys(selStudent.history[k])) {
+                        Object.assign(object, { [labNames[y]]: copy[k][years[i]].lab[y] })
+                    }
+                }
+            }
+            data.push(object)
+        }
+
+        var headers = Object.keys(data[0])
+
+        res.render('checkGrade', { student: selStudent, data: data, headers: headers })
+    } catch (e) {
+        res.status(500).send()
+    }
 
 })
+
+
+
+router.post('/student/teaching/delete/:id', auth, async (req, res) => {
+    try {
+        //checking header and  referer for redirecting purposes
+        console.log(req.params)
+        console.log(req.body)
+        var teachingId = req.body.teachingId
+        var studentId = req.params.id
+
+        Teaching.findByIdAndUpdate(
+            {_id: teachingId },
+            { $pull: { students: studentId } },
+            { new: true },
+            function (err, removedFromUser) {
+
+            })
+
+        res.redirect('/course/view/teaching/' + teachingId);
+
+
+    } catch (e) {
+        res.status(500).send()
+    }
+})
+
+
+
+
+
+
+
+
+
+
+
 
 router.get('/student/:id', auth, async (req, res) => {
     const _id = req.params.id
@@ -303,7 +519,13 @@ router.get('/student/edit/:id', auth, async (req, res) => {
 
     try {
         // const student = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
-        const course = await Course.find({ 'students': { $eq: req.params.id } });
+        var teachingId = req.query.teachingId
+
+        const teaching = await Teaching.findById({ _id: teachingId });
+
+        var course = await Course.findOne({ "teachings": teaching._id })
+
+
         const theory = []
         const lab = []
         arr = [];
@@ -312,15 +534,14 @@ router.get('/student/edit/:id', auth, async (req, res) => {
         compTheoryGrade = []
         const student = await Student.findById(req.params.id)
 
-
-        theory.push(course[0].theory)
-        lab.push(course[0].lab)
+        theory.push(course.theory)
+        lab.push(course.lab)
 
         theory[0].names.forEach(function (v, i) {
             var obj = {};
-            obj.id = course[0].theory.id[i]
+            obj.id = course.theory.id[i]
             obj.name = v;
-            obj.weight = course[0].theory.weight[i];
+            obj.weight = course.theory.weight[i];
             obj.compTheoryGrade = student.theoryGrade.computedGrade[i]
             obj.finalGradeTh = student.finalGradeTh
             arr.push(obj);
@@ -328,39 +549,62 @@ router.get('/student/edit/:id', auth, async (req, res) => {
 
         lab[0].names.forEach(function (v, i) {
             var obj = {};
-            obj.id = course[0].lab.id[i]
+            obj.id = course.lab.id[i]
             obj.name = v;
-            obj.weight = course[0].lab.weight[i];
+            obj.weight = course.lab.weight[i];
             obj.compLabGrade = student.labGrade.computedGrade[i]
             obj.finalGradeLab = student.finalGradeLab
             arr2.push(obj);
         })
 
-        res.render('editStudent', { arr: arr, arr2: arr2 })
+        var flag = {}
+        if (student.frozen.theory.length == 0 && student.frozen.lab.length == 0) {
+
+            flag = { theory: 0, lab: 0 }
+        } else if (student.frozen.lab.length == 0 && student.frozen.theory.length == 1) {
+            flag = { theory: 1, lab: 0 }
+        } else if (student.frozen.theory.length == 0 && student.frozen.lab.length == 1) {
+            flag = { theory: 0, lab: 1 }
+        } else if (student.frozen.theory.length == 1 && student.frozen.lab.length == 1) {
+            flag = { theory: 0, lab: 0 }
+        }
+        console.log(flag)
+
+
+        flag.stringify = JSON.stringify(flag)
+
+        res.render('editStudent', { arr: arr, arr2: arr2, flag: flag })
         if (!student) {
             // return res.status(404).send()
         }
         // res.send(student)
     } catch (e) {
-        // res.status(400).send(e)
+        res.status(400).send(e)
     }
 })
 
 //grading students
 
 
-router.put('/student/edit/:id', auth, async (req, res) => {
-
+router.put('/student/edit/:id/:teachingId', auth, async (req, res) => {
+    console.log('bike sto grade')
+    console.log(req.params.teachingId)
     try {
 
         if (req.body.theory && req.body.lab) {
-            const course = await Course.find({ 'students': { $eq: req.params.id } });
+
+            var teaching = await Teaching.findById({ _id: req.params.teachingId })
+
+            var course = await Course.findOne({ 'teachings': { $eq: teaching._id } });
             theoryGradeIds = DbIds(req.body.theory)
             theoryGrade = DbGrade(req.body.theory)
             labGradeIds = DbIds(req.body.lab)
             labGrade = DbGrade(req.body.lab)
-            TheoryNames = DbNames(course[0].theory.names)
-            LabNames = DbNames(course[0].lab.names)
+            TheoryNames = DbNames(course.theory.names)
+            LabNames = DbNames(course.lab.names)
+            // console.log(teaching.year)
+
+            var gradeYear = teaching.year
 
             const student = {}
 
@@ -371,55 +615,79 @@ router.put('/student/edit/:id', auth, async (req, res) => {
 
             for (var i = 0; i < theoryGradeIds.length; i++) {
 
-                if (theoryGrade[i] >= course[0].theoryBounds.bound[i]) {
-                    gradeTheory[i] = theoryGrade[i] * course[0].theory.weight[i] / 100
+                if (theoryGrade[i] >= course.theoryBounds.bound[i]) {
+                    gradeTheory[i] = theoryGrade[i] * course.theory.weight[i] / 100
+                    finalGradTheory += gradeTheory[i]
 
                 } else {
-                    gradeTheory[i] = 0
+                    gradeTheory[i] = theoryGrade[i]
                     // finalGradTheory += gradeTheory[i]                    
                 }
-                finalGradTheory += gradeTheory[i]
+                // finalGradTheory += gradeTheory[i]
             }
             // console.log('thewria ', gradeTheory, finalGradTheory)
             // console.log(course[0].lab.weight, labGrade, course[0].labBounds)
             for (var i = 0; i < labGradeIds.length; i++) {
 
-                if (labGrade[i] >= course[0].labBounds.bound[i]) {
-                    gradeLab[i] = labGrade[i] * course[0].lab.weight[i] / 100
+                if (labGrade[i] >= course.labBounds.bound[i]) {
+                    gradeLab[i] = labGrade[i] * course.lab.weight[i] / 100
+                    finalGradLab += gradeLab[i]
 
                 } else {
-                    gradeLab[i] = 0
+                    gradeLab[i] = labGrade[i]
                     // finalGradTheory += gradeTheory[i]                    
                 }
-                finalGradLab += gradeLab[i]
+                // finalGradLab += gradeLab[i]
             }
-           
+
+            var theoryGradeNum = theoryGrade.map(str => {
+                return Number(str);
+            });
+            var labGradeNum = labGrade.map(str => {
+                return Number(str);
+            });
+
+            var stud = await Student.findById(req.params.id)
+
+            var history = {}
+            history = { [gradeYear]: { 'theory': theoryGradeNum, 'lab': labGradeNum } }
+            // console.log(stud.history)
+
             student = Student.findByIdAndUpdate(
                 req.params.id,
-                { $set: { "theoryGrade.name": TheoryNames, "theoryGrade.computedGrade": gradeTheory, "finalGradeTh": finalGradTheory, "labGrade.name": LabNames, "labGrade.computedGrade": gradeLab, "finalGradeLab": finalGradLab } },
+                {
+                    $set: {
+                        "theoryGrade.name": TheoryNames, "theoryGrade.computedGrade": gradeTheory,
+                        "finalGradeTh": finalGradTheory, "labGrade.name": LabNames, "labGrade.computedGrade": gradeLab, "finalGradeLab": finalGradLab
+                    },
+                    $push: { "history": history }
+                },
                 { safe: true, upsert: true },
                 function (err, model) {
                     if (model) {
 
-                        return res.status(200).send({ result: 'redirect', url: '/student/edit/' + req.params.id })
+                        return res.status(200).send({ result: 'redirect', url: '/student/edit/' + req.params.id + '?teachingId=' + req.params.teachingId })
+                    } else {
+                        // console.log(err)
                     }
                 }
             );
 
         } else if (!(req.body.lab)) {
-            const course = await Course.find({ 'students': { $eq: req.params.id } });
+            var teaching = await Teaching.findById({ _id: req.params.teachingId })
+            var course = await Course.findOne({ 'teachings': { $eq: teaching._id } });
+            var gradeYear = []
+            gradeYear.push(teaching.year)
+
             theoryGradeIds = DbIds(req.body.theory)
             theoryGrade = DbGrade(req.body.theory)
             const student = {}
-            TheoryNames = DbNames(course[0].theory.names)
-
+            TheoryNames = DbNames(course.theory.names)
             gradeTheory = []
             var finalGradTheory = 0;
-
             for (var i = 0; i < theoryGradeIds.length; i++) {
-
-                if (theoryGrade[i] >= course[0].theoryBounds.bound[i]) {
-                    gradeTheory[i] = theoryGrade[i] * course[0].theory.weight[i] / 100
+                if (theoryGrade[i] >= course.theoryBounds.bound[i]) {
+                    gradeTheory[i] = theoryGrade[i] * course.theory.weight[i] / 100
 
                 } else {
                     gradeTheory[i] = 0
@@ -428,14 +696,25 @@ router.put('/student/edit/:id', auth, async (req, res) => {
                 finalGradTheory += gradeTheory[i]
             }
 
+            var theoryGradeNum = theoryGrade.map(str => {
+                return Number(str);
+            });
+            var labGradeNum = 0
+
+            var history = {}
+            history = { [gradeYear]: { 'theory': theoryGradeNum, 'lab': labGradeNum } }
+
             student = Student.findByIdAndUpdate(
                 req.params.id,
-                { $set: { "theoryGrade.name": TheoryNames, "theoryGrade.computedGrade": gradeTheory, "finalGradeTh": finalGradTheory } },
+                {
+                    $set: { "theoryGrade.name": TheoryNames, "theoryGrade.computedGrade": gradeTheory, "theoryGrade.year": gradeYear, "finalGradeTh": finalGradTheory },
+                    $push: { "history": history }
+                },
                 { safe: true, upsert: true },
                 function (err, model) {
                     if (model) {
 
-                        return res.status(200).send({ result: 'redirect', url: '/student/edit/' + req.params.id })
+                        return res.status(200).send({ result: 'redirect', url: '/student/edit/' + req.params.id + '?teachingId=' + req.params.teachingId })
                     }
                 }
             );
@@ -443,32 +722,48 @@ router.put('/student/edit/:id', auth, async (req, res) => {
 
             labGradeIds = DbIds(req.body.lab)
             labGrade = DbGrade(req.body.lab)
-            const student = {}
-            const course = await Course.find({ 'students': { $eq: req.params.id } });
 
-            LabNames = DbNames(course[0].lab.names)
+            const student = {}
+            var teaching = await Teaching.findById({ _id: req.params.teachingId })
+            var course = await Course.findOne({ 'teachings': { $eq: teaching._id } });
+            var gradeYear = []
+            gradeYear.push(teaching.year)
+            LabNames = DbNames(course)
             var finalGradLab = 0;
             gradeLab = []
-           
+
             for (var i = 0; i < labGradeIds.length; i++) {
 
-                if (labGrade[i] >= course[0].labBounds.bound[i]) {
-                    gradeLab[i] = labGrade[i] * course[0].lab.weight[i] / 100
+                if (labGrade[i] >= course.labBounds.bound[i]) {
+                    gradeLab[i] = labGrade[i] * course.lab.weight[i] / 100
 
                 } else {
                     gradeLab[i] = 0
-                    // finalGradTheory += gradeTheory[i]                    
+                    // finalGradTheory += gradeTheory[i]     
                 }
                 finalGradLab += gradeLab[i]
             }
+
+
+            var theoryGradeNum = 0
+            var labGradeNum = labGrade.map(str => {
+                return Number(str);
+            });
+
+
+            var history = {}
+            history = { [gradeYear]: { 'theory': theoryGradeNum, 'lab': labGradeNum } }
+
+
             student = Student.findByIdAndUpdate(
                 req.params.id,
-                { $set: { "labGrade.name": LabNames, "labGrade.computedGrade": gradeLab, "finalGradeLab": finalGradLab } },
+                { $set: { "labGrade.name": LabNames, "labGrade.computedGrade": gradeLab, "labGrade.year": gradeYear, "finalGradeLab": finalGradLab }, $push: { "history": history } },
+
                 { safe: true, upsert: true },
                 function (err, model) {
                     if (model) {
 
-                        return res.status(200).send({ result: 'redirect', url: '/student/edit/' + req.params.id })
+                        return res.status(200).send({ result: 'redirect', url: '/student/edit/' + req.params.id + '?teachingId=' + req.params.teachingId })
                     }
                 }
             );
@@ -499,14 +794,13 @@ router.post('/student/delete/:id', auth, async (req, res) => {
             courseId = null
 
         } else {
-            courseId = req.headers.referer.split('/')[4].slice(0, -1)
+            courseId = req.headers.referer.split('/')[6].slice(0)
         }
 
         if (courseId != null) {
-
             Student.findOneAndDelete({ _id: req.params.id })
                 .exec(function (err, removed) {
-                    Course.findOneAndUpdate(
+                    Teaching.findOneAndUpdate(
                         { students: req.params.id },
                         // no _id it is array of objectId not object with _ids
                         { $pull: { students: req.params.id } },
@@ -515,12 +809,12 @@ router.post('/student/delete/:id', auth, async (req, res) => {
 
                         })
                 })
-            res.redirect('/course/' + courseId);
+            res.redirect('/course/view/teaching/' + courseId);
         } else {
 
             Student.findOneAndDelete({ _id: req.params.id })
                 .exec(function (err, removed) {
-                    Course.findOneAndUpdate(
+                    Teaching.findOneAndUpdate(
                         { students: req.params.id },
                         // no _id it is array of objectId not object with _ids
                         { $pull: { students: req.params.id } },
@@ -529,7 +823,8 @@ router.post('/student/delete/:id', auth, async (req, res) => {
 
                         })
                 })
-            res.redirect('/student/');
+
+            res.redirect('/student');
         }
 
     } catch (e) {

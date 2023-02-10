@@ -50,6 +50,11 @@ const courseSchema = new mongoose.Schema({
         id: [Number],
         bound: [Number]
     },
+    teachings: [{
+        type: mongoose.Schema.Types.ObjectId,
+        required: false
+    }],
+
     students: [{
         type: mongoose.Schema.Types.ObjectId,
         required: false

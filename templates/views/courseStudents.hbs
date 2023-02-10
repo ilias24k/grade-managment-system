@@ -3,7 +3,20 @@
 <html>
 
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+
     <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
     <title>Grade Mangment</title>
 
 <body>
@@ -18,24 +31,57 @@
 
             <body>
                 <h1>Students</h1>
-                <p>All Students</p>
+                <p>Teaching Students</p>
+
+                {{#checkFlag flag.flag "0"}}
+                <button id="s2" class="btn btn-success float-left" onclick="check({{flag.flag}});lock()">Unlocked
+                </button>
+                {{else}}
+                <button id="s2" class="btn btn-danger float-left" onclick="check({{flag.flag}});lock()">Locked
+                </button>
+                {{/checkFlag}}
 
                 <div class="row">
-                    <div class="col-6">
+
+                    <div class="col-6  justify-content-start">
 
                     </div>
                     <div class="col-6 d-flex justify-content-end">
+
+                        <form class="studentForm" id="students_form" action="/upload_students" method="POST"
+                            enctype="multipart/form-data">
+                            <input type="hidden" id="hidden1" name="teaching_id">
+                            <input type="file" id="myFile" name="files"
+                                onchange='document.getElementById("students_form").submit();' style="display: none;">
+                            <input type="hidden" name="id">
+
+                            {{#checkFlag flag.flag "0"}}
+
+                            <button id="s1" type="button" onclick=' document.getElementById("myFile").click();'
+                                name="button24k" class="btn btn-outline-primary"><i class="bi bi-plus"></i><i>Add
+                                    Students</button>
+                            <input type="hidden" name="col">
+                            {{else}}
+                            <button id="s1" disabled type="button" onclick=' document.getElementById("myFile").click();'
+                                name="button24k" class="btn btn-outline-primary"><i class="bi bi-plus"></i><i>Add
+                                    Students</button>
+                            <input type="hidden" name="col">
+                            {{/checkFlag}}
+
+
+                        </form>
+
                         <a href="" type="button" id="analytical" class="btn btn-primary align-self-center" onclick="">
                             Analytical Grade</a>
-                        <a href="" type="button" id="typical"
-                            class="btn btn-primary align-self-center"> Typical Grade</a>
+                        <a href="" type="button" id="typical" class="btn btn-primary align-self-center"> Typical
+                            Grade</a>
 
                     </div>
                 </div>
                 <div class="col-6 d-flex justify-content-end">
 
                 </div>
-                <table class="table table-bordered">
+                <table id="studsTable" class="table table-bordered">
                     <thead class="thead-dark">
                         <tr>
                             <th scope="col">AM</th>
@@ -46,6 +92,8 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {{#checkFlag flag.flag "0"}}
+
                         {{#each records}}
                         <tr>
                             <td>{{AM}}</td>
@@ -53,29 +101,131 @@
                             <td>{{email}}</td>
                             <td class="text-end">
 
-                                <a href="/student/edit/{{_id}}" type="button" class="btn btn-outline-warning"><i
-                                        class="bi bi-pencil"></i>Edit</a>
+                                <form action="/student/edit/{{_id}}" method="GET">
+                                    <input type="hidden" name="teachingId" id="tId" value=" ">
+                                    <button id="button" class="btn btn-outline-primary"><i class="bi bi-person-pencil"></i><i
+                                            onclick="editing({{_id}})">Edit</button>
+                                </form>
+
+
+                                <form action="/student/teaching/delete/{{_id}}" method="POST">
+                                    <input type="hidden" name="teachingId" id="tId2" value=" ">
+                                    <button id="button" class="btn btn-outline-danger"><i class="bi bi-person-person-x"></i><i
+                                            onclick="editing({{_id}})">Delete</button>
+                                </form>
+
+                                {{/each}}
+
+                                {{else}}
+                                {{#each records}}
+                        <tr>
+                            <td>{{AM}}</td>
+                            <td>{{name}}</td>
+                            <td>{{email}}</td>
+                            <td class="text-end">
+
+                                <button onclick="location.href='/student/edit/{{_id}}'" type="button" disabled
+                                    class="btn btn-outline-warning"><i class="bi bi-pencil"></i>
+                                    Edit</button>
 
                                 <form action="/student/delete/{{_id}}" method="POST">
                                     <input type="hidden" name="id" value="{{ _id}}">
-                                    <button class="btn btn-outline-danger"><i class="bi bi-person-x"></i><i
-                                            onclick="deleting({{_id}})">Delete</button>
-                                </form>
+                                    <button id="button" disabled class="btn btn-outline-danger"><i
+                                            class="bi bi-person-x"></i><i onclick="deleting({{_id}})">Delete</button>
+                                    {{/each}}
+                                    {{/checkFlag}}
+
+
                             </td>
 
-                          
-                        </tr>
-                        {{/each}}
-                    </tbody>
 
+                        </tr>
+
+                    </tbody>
 
                     </tr>
                     </tbody>
                 </table>
+
+
                 <script>
                     var currentCourse = window.location.pathname.split("/").pop()
                     $("#analytical").attr("href", '/download/analytical/' + currentCourse);
                     $("#typical").attr("href", '/download/typical/' + currentCourse);
+                    $('#hidden1').val(currentCourse);
+                    $('#tId').val(currentCourse);
+                    $('#tId2').val(currentCourse);
+
+                    var analyticalCount = 0;
+                    var typicalCount = 0;
+
+                    $('#typical').click(function () {
+                        typicalCount++
+                        if (analyticalCount === 1 && typicalCount === 1) {
+                            $('#s2').click();
+                        }
+                    });
+
+                    $('#analytical').click(function () {
+                        analyticalCount++
+                        if (analyticalCount === 1 && typicalCount === 1) {
+                            $('#s2').click();
+                        }
+                    });
+                    var choice
+                    var data = {}
+
+                    function check(flag) {
+                        choice = flag
+                    }
+
+                    function sent(studentId) {
+                        var teachingId = currentCourse
+                        data = { teachingId }
+                        studentId = studentId
+                        $.ajax({
+                            url: '/student/edit/' + studentId,
+                            type: 'GET',
+                            data: (data),
+                            success: function (data) {
+                                document.write(data)
+                                document.getElementById('output1').innerHTML = 'Some text!';
+                            }
+                        })
+                    }
+
+                    function lock() {
+                        if (choice == '0') {
+                            choice = 1      //changing to 1 to lock
+                            data = { choice }
+                            $.ajax({
+                                url: '/course/teaching/lock/' + currentCourse,
+                                type: 'PATCH',
+                                data: (data),
+                                success: function (data) {
+                                    if (data.result == 'redirect') {
+                                        //redirecting to main page from here.
+                                        window.location.replace(data.url);
+                                    }
+                                }
+                            })
+                        } else if (choice == 1) {
+                            choice = 0      //changing to 0 to unlock
+                            data = { choice }
+                            $.ajax({
+                                url: '/course/teaching/lock/' + currentCourse,
+                                type: 'PATCH',
+                                data: (data),
+                                success: function (data) {
+                                    if (data.result == 'redirect') {
+                                        //redirecting to main page from here.
+                                        window.location.replace(data.url);
+                                    }
+                                }
+                            })
+                        }
+                    }
+
                 </script>
 
             </body>
@@ -83,7 +233,6 @@
 
 
     </div>
-
 
 </body>
 

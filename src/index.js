@@ -4,11 +4,13 @@ const userRouter = require('./routers/user')
 const courseRouter = require('./routers/course')
 const studentRouter = require('./routers/student')
 const homeRouter = require('./routers/home')
+
 const hbs = require('hbs')
 const path = require('path')
 const bodyParser = require('body-parser')
 const fs = require('fs')
 const Course = require('../src/models/course')
+const Teaching = require('../src/models/teaching')
 const Student = require('../src/models/student')
 const cookieParser = require('cookie-parser');
 
@@ -27,7 +29,8 @@ app.use(homeRouter)
 app.use(userRouter)
 app.use(courseRouter)
 app.use(studentRouter)
- 
+
+
 
 const multer = require('multer')
 const async = require('hbs/lib/async')
@@ -43,8 +46,8 @@ app.set('view engine', 'hbs')
 hbs.registerPartials(partialsPath)
 
 app.use(express.static(publicDirectoryPath))
-hbs.registerHelper("inc", function (value, options) {
-  return parseInt(value) + 1;
+hbs.registerHelper("checkFlag", function (value1, value2, options) {
+  return (value1 == value2)? options.fn(this) : options.inverse(this);
 });
 
 
@@ -120,24 +123,38 @@ async function clearStuds() {
   const currentYear = todaysDate.getFullYear() //current year YYYY
   records = []
   const courses = await Course.find({})
+  var courseTeachings
+  var teaching
 
   for (var i = 0; i < courses.length; i++) {
-    courseStudents = courses[i].students
-    records = await Student.find({ '_id': { $in: courseStudents } });
-    // console.log(records.length)
-    for (var y = 0; y < records.length; y++) {
-      courseDate = records[y].updatedAt.toString()
-      yearOfStudentUpdate = courseDate.substring(11, 15)                  // last updated grade in YYYY
-      // console.log( records[y].id)
-      if ((currentYear - yearOfStudentUpdate) > courses[i].gradeMaintainTime) {
-        id = records[y].id
-        Course.findOneAndUpdate(
-          { students: id },
-          { $pull: { students: id } },
-          { new: true },
-          function (err, removedFromUser) {
+    courseTeachings = courses[i].teachings
+    for (var j = 0; j < courseTeachings.length; j++) {
+      teaching = await Teaching.findById({ _id: courseTeachings[j] })
+      teachingStudents = teaching.students
+      records = await Student.find({ '_id': { $in: teachingStudents } });
 
-          })
+      for (var y = 0; y < records.length; y++) {
+        courseDate = records[y].updatedAt.toString()
+        yearOfStudentUpdate = courseDate.substring(11, 15)                  // last updated grade in YYYY
+        // console.log(records[y])
+        // yearOfStudentUpdate = 0
+        if ((currentYear - yearOfStudentUpdate) > teaching.duration) {
+
+          id = records[y].id
+
+
+          // when the duration of teachings grade is smaller than the balance of curr year - the year when the grade of
+          // student was updated
+          // he is removed from the latest teaching by year
+          Teaching.findOneAndUpdate(
+            { $and: [{ students: { $eq: id } }, { year: { $eq: currentYear } }] },
+            { $pull: { students: id } },
+            { new: true },
+
+            function (err, removedFromUser) {
+
+            })
+        }
       }
     }
 

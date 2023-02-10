@@ -42,6 +42,9 @@
                                     <th scope="col"> final grade</th>
                                 </tr>
                             </thead>
+
+                            {{#checkFlag flag.theory "0"}}
+
                             <tbody>
                                 {{#each arr}}
 
@@ -57,6 +60,25 @@
                                     <td> {{finalGradeTh}}</td>
                                 </tr>
                                 {{/each}}
+                            </tbody>
+                            {{else}}
+                            <tbody>
+                                {{#each arr}}
+
+                                <tr>
+                                    <td>{{id}} <class="form-control1">
+                                            </class>
+                                    <td>{{name}} <id="theoryName" class="form-control1">
+                                    </td>
+                                    <td>{{weight}} <id="theoryWeight" class="form-control1">
+                                    </td>
+                                    <td> <input type="text" disabled id="theoryGrade" class="form-control1"> </td>
+                                    <td> {{compTheoryGrade}}</td>
+                                    <td> {{finalGradeTh}}</td>
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                            {{/checkFlag}}
                         </table>
 
 
@@ -75,6 +97,7 @@
                                     <th scope="col"> final grade</th>
                                 </tr>
                             </thead>
+                            {{#checkFlag flag.lab "0"}}
                             <tbody>
                                 {{#each arr2}}
                                 <tr>
@@ -89,7 +112,24 @@
                                     <td> {{finalGradeLab}} </td>
                                 </tr>
                                 {{/each}}
-                                
+                            </tbody>
+                            {{else}}
+                            <tbody>
+                                {{#each arr2}}
+                                <tr>
+                                    <td>{{id}} <class="form-control1">
+                                            </class>
+                                    <td>{{name}} <id="labName" class="form-control2">
+                                    </td>
+                                    <td>{{weight}} <id="labWeight" class="form-control2">
+                                    </td>
+                                    <td> <input type="text" disabled id="labGrade" class="form-control2"> </td>
+                                    <td> {{compLabGrade}}</td>
+                                    <td> {{finalGradeLab}} </td>
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                            {{/checkFlag}}
                         </table>
 
                 </div>
@@ -112,10 +152,10 @@
                     $('.form-control1').each(function () {
 
                         var textVal = $(this).val();
-                        if (textVal != null && textVal!=0) {
+                        if (textVal != null && textVal != 0) {
                             console.log(textVal)
                             theory.push(textVal)
-                        }else if (textVal == '0' ){
+                        } else if (textVal == '0') {
                             theory.push(0)
                         }
 
@@ -130,10 +170,10 @@
 
                     $('.form-control2').each(function () {
                         var textVal2 = $(this).val();
-                        if (textVal2 != null  && textVal2!=0) {
+                        if (textVal2 != null && textVal2 != 0) {
                             console.log(textVal2)
                             lab.push(textVal2)
-                        }else if (textVal2 == '0' ){
+                        } else if (textVal2 == '0') {
                             lab.push(0)
                         }
                     });
@@ -146,27 +186,31 @@
 
 
                     if ((theory.length / (rowCount - 1)) == 2 && (lab.length / (rowCount2 - 1)) == 2) {
-                    data = { theory,lab }
-                } else if ((lab.length / (rowCount2 - 1)) == 2) {
-                    data = { lab }
-                }
-                else if ((theory.length / (rowCount - 1)) == 2) {
-                    data = { theory}
-                }
-
-                console.log(data);
-
-                $.ajax({
-                    url: window.location.pathname,
-                    type: "PUT",
-                    data: (data),
-                    success: function (data) {
-                        if (data.result == 'redirect') {
-                            //redirecting to main page from here.
-                            window.location.replace(data.url);
-                        }
+                        data = { theory, lab }
+                    } else if ((lab.length / (rowCount2 - 1)) == 2) {
+                        data = { lab }
                     }
-                });
+                    else if ((theory.length / (rowCount - 1)) == 2) {
+                        data = { theory }
+                    }
+
+                    console.log(data);
+                    var studId = window.location.pathname.split("/").pop()
+                    var teachId = window.location.search.substring(12)
+
+                    var url =  '/student/edit/'+studId +'/'+teachId                    
+
+                    $.ajax({
+                        url: url,
+                        type: "PUT",
+                        data: (data),
+                        success: function (data) {
+                            if (data.result == 'redirect') {
+                                //redirecting to main page from here.
+                                window.location.replace(data.url);
+                            }
+                        }
+                    });
 
                 });
 

@@ -6,18 +6,7 @@
 
 <head>
     <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
-    {{!--
-    <script>
-        function f1(_id) {
-            var rowID = _id
-            console.log(rowID)
-            var elem = document.getElementById("s1")
-            elem.value = rowID
-            console.log(elem.value)
 
-
-        }
-    </script> --}}
 
     <title>Grade Mangment</title>
 
@@ -56,7 +45,7 @@
                         <tr>
                             <th scope="col">rowid {{_id}}</th>
                             <th scope="col">Course Name</th>
-                            
+
                             <th scope="col">Grade Maintain Time</th>
                             <th scope="col" class="text-end">Action</th>
                         </tr>
@@ -66,33 +55,15 @@
                         <tr>
                             <td>{{_id}}</td>
                             <td>{{name}}</td>
-                            
+
                             <td>{{gradeMaintainTime}}</td>
                             <td class="text-end">
 
-                                <form class="studentForm" id="students_form{{_id}}" action="/upload_students"
-                                    method="POST" enctype="multipart/form-data" value="{{_id}}">
-                                    <input type="hidden" name="col" value="{{_id}}">
-                                    <input type="file" value="{{_id}}" id="myFile{{_id}}" name="files"
-                                        onchange='document.getElementById("students_form{{_id}}").submit();'
-                                        style="display: none;">
-                                    <input type="hidden" name="id" value="{{_id}}">
 
 
-                                    <button id="s1" type="button"
-                                        onclick=' document.getElementById("myFile{{_id}}").click();' value="{{_id}}"
-                                        name="button24k" class="btn btn-outline-primary"><i
-                                            class="bi bi-plus"></i><i>Add Students</button>
-                                    <input type="hidden" name="col" value="{{_id}}">
+                                <a href="/course/teaching/{{_id}}" type="button" class="btn btn-outline-primary"><i
+                                        class="bi bi-plus"></i>Add Teaching</a>
 
-                                </form>
-
-
-                                <form action="/course/{{_id}}" method="GET">
-                                    {{!-- <input type="hidden" name="id" value="{{ _id}}"> --}}
-                                    <button class="btn btn-outline-info"><i class="bi bi-eye"></i><i
-                                            onclick="viewing({{_id}})">View</button>
-                                </form>
 
 
                                 <a href="/course/edit/{{_id}}" type="button" class="btn btn-outline-warning"><i
@@ -107,7 +78,7 @@
 
                             </td>
 
-                            
+
                         </tr>
                         {{/each}}
 
