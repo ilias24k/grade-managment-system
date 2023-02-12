@@ -367,25 +367,25 @@ router.get('/student', auth, async (req, res) => {
 //getting all courses students
 router.get('/course/students/:id', auth, async (req, res) => {
     try {
-        
+
         var course = await Course.findById(req.params.id)
         var teachingsList = course.teachings
         var studentListId = []
-        for (var i =0; i < teachingsList.length; i++){
+        for (var i = 0; i < teachingsList.length; i++) {
             var teaching = await Teaching.findById(teachingsList[i])
-            for (var y=0; y< teaching.students.length; y++){
+            for (var y = 0; y < teaching.students.length; y++) {
                 studentListId.push(teaching.students[y])
             }
-            
+
         }
-        var studentList=[]
-        for (var i = 0; i< studentListId.length; i++){
+        var studentList = []
+        for (var i = 0; i < studentListId.length; i++) {
             var student = await Student.findById(studentListId[i])
             studentList.push(student)
         }
         var teachingList = await Teaching.find({ "flag": false })
 
-        res.render('student', { course:course,studentList: studentList,teachingList:teachingList })
+        res.render('student', { course: course, studentList: studentList, teachingList: teachingList })
 
         // res.send(students)
     } catch (e) {
@@ -502,7 +502,7 @@ router.post('/student/teaching/delete/:id', auth, async (req, res) => {
         var studentId = req.params.id
 
         Teaching.findByIdAndUpdate(
-            {_id: teachingId },
+            { _id: teachingId },
             { $pull: { students: studentId } },
             { new: true },
             function (err, removedFromUser) {
