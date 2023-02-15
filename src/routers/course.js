@@ -366,6 +366,7 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
                 year: nums2[i],
                 teacher: [],
                 students: [],
+                courseName: course.name,
                 duration: course.gradeMaintainTime
             }
             insertedTeachings.push(teaching)

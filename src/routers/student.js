@@ -351,16 +351,58 @@ async function uploadFiles(req, res) {
 router.get('/student', auth, async (req, res) => {
 
     try {
-        const students = await Student.find({})
-        var teachings = await Teaching.find({})
+        // const students = await Student.find({})
+        // var teachings = await Teaching.find({})
         var courses = await Course.find({})
-        var teachingList = await Teaching.find({ "flag": false })
+        var teachingStudents = []
+        var data = []
+        var object = {}
+        var teachingYears = []
+        var curStud
+        var curCourse
+        var curAM
+        var curEmail
+        var year
 
-        var studentList = students
-        res.render('student', { studentList: studentList, teachingList: teachingList })
+        var students = await Student.find({})
+        var teachings = await Teaching.find({})
+        var teachingStudents = teachings.students
+
+
+        for (var i = 0; i < students.length; i++) {
+
+            var teaching = await Teaching.find({ 'students': students[i].id })
+            curStud = students[i].name
+            curEmail = students[i].email
+            curAM = students[i].AM
+            studId = students[i].id
+
+            for (var y = 0; y < teaching.length; y++) {
+                const set = new Set();
+
+                year = teaching[y].year
+                if (teaching.some((object) => set.size === (set.add(object.property), set.size))) {
+                    teachingYears.push(teaching[y].year)
+                    curCourse = teaching[y].courseName
+                } else {
+                    teachingYears = year
+                    curCourse = teaching[y].courseName
+                }
+
+            }
+            object = { curAM, curStud, curEmail, curCourse, teachingYears ,studId}
+            data.push(object)
+
+        }
+
+        // console.log(data.length)
+        // console.log(data)
+
+        res.render('allCourseStudents', { data: data })
 
         // res.send(students)
     } catch (e) {
+        console.log(e)
         res.status(500).send()
     }
 })
@@ -428,12 +470,12 @@ router.patch('/students/upd/', auth, async (req, res) => {
 
 
 router.get('/course/student/check/:id', auth, async (req, res) => {
-
     try {
+        
         const selStudent = await Student.findById(req.params.id)
-
         var years = Object.keys(Object.assign({}, ...selStudent.history))
 
+      
         var data = []
         var object = {}
         var semesterList = []
@@ -481,12 +523,12 @@ router.get('/course/student/check/:id', auth, async (req, res) => {
             }
             data.push(object)
         }
-
+       
         var headers = Object.keys(data[0])
 
         res.render('checkGrade', { student: selStudent, data: data, headers: headers })
     } catch (e) {
-        res.status(500).send()
+        res.status(500).send('No grade history. Please grade the student first!')
     }
 
 })
