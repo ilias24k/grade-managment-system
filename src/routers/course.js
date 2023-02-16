@@ -29,9 +29,10 @@ router.post('/courses', async (req, res) => {
 router.get('/upload_course', async (req, res) => {
 
     try {
+        var user = req.user
         const courses = await Course.find({})
         // res.send(courses)
-        res.render('course', { courses })
+        res.render('course', { courses, user: user })
     } catch (e) {
         res.status(500).send()
     }
@@ -100,11 +101,13 @@ async function uploadFiles(req, res) {
 router.get('/course', auth, async (req, res) => {
     // console.log(req.cookie)
     try {
+        // console.log(req.user)
+        var user = req.user
         const courses = await Course.find({})
         // res.send(courses)
         var courseList = courses
 
-        res.render('course', { courseList: courseList })
+        res.render('course', { courseList: courseList, user: JSON.stringify(user) })
     } catch (e) {
         res.status(500).send()
     }
@@ -115,6 +118,7 @@ router.get('/course', auth, async (req, res) => {
 
 router.get('/course/:id', auth, async (req, res) => {
     const _id = req.params.id
+    var user = req.user
 
     try {
         var students = [];
@@ -127,7 +131,7 @@ router.get('/course/:id', auth, async (req, res) => {
         if (!course) {
             return res.status(404).send()
         }
-        res.render('courseStudents', { records: records })
+        res.render('courseStudents', { records: records, user: JSON.stringify(user) })
     } catch (e) {
         res.status(500).send()
     }
@@ -139,6 +143,7 @@ router.get('/course/:id', auth, async (req, res) => {
 router.get('/course/edit/:id', auth, async (req, res) => {
 
     const _id = req.params.id
+    var user = req.user
 
     try {
         const course = await Course.findById(_id)
@@ -183,7 +188,7 @@ router.get('/course/edit/:id', auth, async (req, res) => {
         }
         res.render('editCourse', {
             arr: arr, arr2: arr2, generalTheoryWeight: generalTheoryWeight, generalLabWeight: generalLabWeight,
-            lowTheoryBound: lowTheoryBound, lowLabBound: lowLabBound
+            lowTheoryBound: lowTheoryBound, lowLabBound: lowLabBound, user: JSON.stringify(user)
         })
     } catch (e) {
         res.status(500).send()
@@ -194,6 +199,7 @@ router.get('/course/edit/:id', auth, async (req, res) => {
 router.get('/course/teaching/:id', auth, async (req, res) => {
 
     try {
+        var user = req.user
         var course = await Course.findById(req.params.id)
         var teachingList = []
         var usersList = []
@@ -215,7 +221,7 @@ router.get('/course/teaching/:id', auth, async (req, res) => {
             }
         }
 
-        res.render('teaching', { teachingList: teachingList, usersList: usersList })
+        res.render('teaching', { teachingList: teachingList, usersList: usersList, user: JSON.stringify(user) })
 
         // res.send(students)
     } catch (e) {
@@ -230,7 +236,7 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
     var year = req.body.rows[index].year
     var teacher = req.body.teacher
     var duration = req.body.duration
-    
+
 
     var user = await User.findOne({ "name": teacher })
 
@@ -283,7 +289,7 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
                 function (err, model) {
                     // console.log();
                 })
-                return
+            return
         }
 
 
@@ -328,17 +334,7 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
         var insertedTeachingsSemester = []
         var insertedTeachingsYear = []
         var insertedTeachings = []
-        // var selectedTeacher = req.body.teacher_name
 
-        // var teacher = await User.find({})
-
-        // for (var i = 0; i < teacher.length; i++) {
-        //     if (selectedTeacher == teacher[i].name) {
-        //         console.log('matsarei')
-
-
-        //     }
-        // }
         var course = await Course.findById(req.params.id)
 
         if (typeof req.body.semester === 'string' && typeof req.body.year === 'string') {
@@ -386,7 +382,7 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
                 );
             })
         });
-        
+
         res.status(201)
         res.redirect('/course/teaching/' + req.params.id)
 
@@ -433,7 +429,7 @@ router.patch('/course/teaching/delete/:id', auth, async (req, res) => {
 router.patch('/course/teaching/lock/:id', auth, async (req, res) => {
 
     try {
-        var teaching = await Teaching.findByIdAndUpdate(req.params.id,{'flag': req.body.choice})
+        var teaching = await Teaching.findByIdAndUpdate(req.params.id, { 'flag': req.body.choice })
         // console.log(teaching)
         res.status(201).send({ result: 'redirect', url: '/course/view/teaching/' + req.params.id })
     } catch (error) {
@@ -450,6 +446,7 @@ router.patch('/course/teaching/lock/:id', auth, async (req, res) => {
 router.get('/course/view/teaching/:id', auth, async (req, res) => {
 
     const _id = req.params.id
+    var user = req.user
 
     try {
         var students = [];
@@ -460,17 +457,17 @@ router.get('/course/view/teaching/:id', auth, async (req, res) => {
 
         var records = await Student.find({ '_id': { $in: students } });
         var flag = {}
-        if(teaching.flag == false){
-            
-            flag={flag:0}
-        }else{
-            flag={flag:1}
+        if (teaching.flag == false) {
+
+            flag = { flag: 0 }
+        } else {
+            flag = { flag: 1 }
         }
         flag.stringify = JSON.stringify(flag)
         if (!teaching) {
             return res.status(404).send()
         }
-        res.render('courseStudents', { records: records ,flag: flag})
+        res.render('courseStudents', { records: records, flag: flag, user: JSON.stringify(user) })
 
     } catch (e) {
         res.status(500).send()

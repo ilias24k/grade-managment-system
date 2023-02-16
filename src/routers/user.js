@@ -26,7 +26,7 @@ router.post('/users/signup', async (req, res) => {
 
     } catch (e) {
         res.status(400).redirect('/users/signup')
-        
+
     }
 
 })
@@ -74,12 +74,6 @@ router.post('/users/logout', auth, async (req, res) => {
 })
 
 
-
-// router.get('/users/me', auth, async (req, res) => {
-
-//     res.send(req.user)
-
-// })
 
 router.get('/users/:id', async (req, res) => {
     const _id = req.params.id

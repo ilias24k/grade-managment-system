@@ -58,10 +58,6 @@ router.get('/download/analytical/:id', async function (req, res) {
         }
     }
 
-
-
-
-
     for (var i = 0; i < students.length; i++) {
         for (var y = 0; y < students[i].labGrade.computedGrade.length; y++) {
             labList.push(students[i].labGrade.computedGrade[y])
@@ -76,8 +72,6 @@ router.get('/download/analytical/:id', async function (req, res) {
             break;
         }
     }
-
-
 
     var workbook = new exceljs.Workbook();
     var sheet = workbook.addWorksheet('records');
@@ -351,6 +345,8 @@ async function uploadFiles(req, res) {
 router.get('/student', auth, async (req, res) => {
 
     try {
+        var user = req.user
+
         // const students = await Student.find({})
         // var teachings = await Teaching.find({})
         var courses = await Course.find({})
@@ -390,7 +386,7 @@ router.get('/student', auth, async (req, res) => {
                 }
 
             }
-            object = { curAM, curStud, curEmail, curCourse, teachingYears ,studId}
+            object = { curAM, curStud, curEmail, curCourse, teachingYears, studId }
             data.push(object)
 
         }
@@ -398,7 +394,7 @@ router.get('/student', auth, async (req, res) => {
         // console.log(data.length)
         // console.log(data)
 
-        res.render('allCourseStudents', { data: data })
+        res.render('allCourseStudents', { data: data, user: JSON.stringify(user) })
 
         // res.send(students)
     } catch (e) {
@@ -409,6 +405,7 @@ router.get('/student', auth, async (req, res) => {
 //getting all courses students
 router.get('/course/students/:id', auth, async (req, res) => {
     try {
+        var user = req.user
 
         var course = await Course.findById(req.params.id)
         var teachingsList = course.teachings
@@ -427,7 +424,7 @@ router.get('/course/students/:id', auth, async (req, res) => {
         }
         var teachingList = await Teaching.find({ "flag": false })
 
-        res.render('student', { course: course, studentList: studentList, teachingList: teachingList })
+        res.render('student', { course: course, studentList: studentList, teachingList: teachingList, user: JSON.stringify(user) })
 
         // res.send(students)
     } catch (e) {
@@ -471,11 +468,12 @@ router.patch('/students/upd/', auth, async (req, res) => {
 
 router.get('/course/student/check/:id', auth, async (req, res) => {
     try {
-        
+
         const selStudent = await Student.findById(req.params.id)
         var years = Object.keys(Object.assign({}, ...selStudent.history))
+        var user = req.user
 
-      
+
         var data = []
         var object = {}
         var semesterList = []
@@ -523,10 +521,10 @@ router.get('/course/student/check/:id', auth, async (req, res) => {
             }
             data.push(object)
         }
-       
+
         var headers = Object.keys(data[0])
 
-        res.render('checkGrade', { student: selStudent, data: data, headers: headers })
+        res.render('checkGrade', { student: selStudent, data: data, headers: headers, user: JSON.stringify(user) })
     } catch (e) {
         res.status(500).send('No grade history. Please grade the student first!')
     }
@@ -588,6 +586,8 @@ router.get('/student/:id', auth, async (req, res) => {
 router.get('/student/edit/:id', auth, async (req, res) => {
 
     try {
+        var user = req.user
+
         // const student = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
         var teachingId = req.query.teachingId
 
@@ -643,7 +643,7 @@ router.get('/student/edit/:id', auth, async (req, res) => {
 
         flag.stringify = JSON.stringify(flag)
 
-        res.render('editStudent', { arr: arr, arr2: arr2, flag: flag })
+        res.render('editStudent', { arr: arr, arr2: arr2, flag: flag, user: JSON.stringify(user) })
         if (!student) {
             // return res.status(404).send()
         }
