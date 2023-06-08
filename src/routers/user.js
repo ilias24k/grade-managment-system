@@ -3,7 +3,6 @@ const router = new express.Router()
 const User = require('../models/user')
 const { use, route } = require('./home')
 const auth = require('../middleware/auth')
-const res = require('express/lib/response')
 
 router.get('/users/signup', async (req, res) => {
 
@@ -63,9 +62,10 @@ router.post('/users/logout', auth, async (req, res) => {
         // console.log(req.cookie)
         req.user.tokens = req.user.tokens.filter((token) => {
 
-            res.clearCookie('cookie name')
+           
             return token.token !== req.cookie
         })
+        res.clearCookie('cookie name')
         await req.user.save()
         res.redirect('/')
     } catch (e) {

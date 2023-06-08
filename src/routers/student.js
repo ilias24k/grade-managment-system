@@ -12,7 +12,6 @@ const { json } = require('body-parser')
 const path = require('path')
 const exceljs = require('exceljs')
 const auth = require('../middleware/auth')
-const async = require('hbs/lib/async')
 
 
 const upload = multer({
@@ -556,14 +555,6 @@ router.post('/student/teaching/delete/:id', auth, async (req, res) => {
         res.status(500).send()
     }
 })
-
-
-
-
-
-
-
-
 
 
 
