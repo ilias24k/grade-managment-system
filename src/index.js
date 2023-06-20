@@ -118,6 +118,8 @@ clearFiles2();
 //checks every 24.8 days for updated grade in students and deletes them from course array if 
 // grade upodated time is greater than current date
 
+const removedStudents = []; // create an array to hold removed students
+
 async function clearStuds() {
   const todaysDate = new Date();
   const currentYear = todaysDate.getFullYear(); // current year YYYY
@@ -138,6 +140,12 @@ async function clearStuds() {
         
         if ((currentYear - yearOfStudentUpdate) > teaching.duration) {
           const id = records[y]._id;
+
+          // Add removed student to array
+          removedStudents.push({
+            studentId: id,
+            teachingId: teaching._id
+          });
           
           // remove student with given id from the current year's teaching
           await Teaching.findOneAndUpdate(
@@ -153,6 +161,7 @@ async function clearStuds() {
 }
 
 clearStuds();
+
 
 const jwt = require('jsonwebtoken');
 const res = require('express/lib/response')
@@ -172,3 +181,5 @@ app.get('*', (req, res) => {                //* means everything that hasnt been
 app.listen(port, () => {
   console.log('server is up on port ' + port)
 })
+
+module.exports.removedStudents = removedStudents;

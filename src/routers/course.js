@@ -15,6 +15,7 @@ const User = require('../models/user')
 
 
 
+
 router.post('/courses', async (req, res) => {
     const course = new Course(req.body)
 
