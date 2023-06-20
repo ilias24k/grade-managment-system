@@ -6,7 +6,6 @@ const multer = require('multer')
 const fs = require('fs')
 const auth = require('../middleware/auth')
 const Teaching = require('../models/teaching')
-
 const path = require("path");
 const Student = require('../models/student')
 const { redirect } = require('express/lib/response')
@@ -40,8 +39,43 @@ router.get('/upload_course', async (req, res) => {
 })
 
 const upload = multer({
-    dest: 'files'
-})
+    storage: multer.diskStorage({}),
+    fileFilter: function(req, file, cb) {
+      const ext = path.extname(file.originalname);
+      if (ext !== '.json') {
+        return cb(new Error('Only JSON files are allowed'))
+      }
+      cb(null, true)
+    }
+  });
+  
+  router.post('/course', upload.single("files"), uploadFiles);
+  
+  // error handling middleware for file upload 
+  router.use(function (err, req, res, next) {
+    if (err instanceof multer.MulterError) {
+      // A Multer error occurred when uploading.
+      res.status(400).send('Error uploading file: ' + err.message);
+    } else {
+      // An unknown error occurred.
+      res.status(500).send(err.message + '. Please upload only JSON files.');
+
+    }
+  });
+  
+  function uploadFiles(req, res) {
+    // read the uploaded file
+    const file = req.file;
+    if (!file) return res.status(400).send('No file uploaded.');
+    
+    // parse the JSON data and save to database
+    const courseData = JSON.parse(file.buffer);
+    // save course to database...
+    
+    // redirect to course page
+    res.redirect('/course');
+  }
+  
 
 // uploading courses 
 

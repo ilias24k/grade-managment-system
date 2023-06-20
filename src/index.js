@@ -119,47 +119,36 @@ clearFiles2();
 // grade upodated time is greater than current date
 
 async function clearStuds() {
-  const todaysDate = new Date()
-  const currentYear = todaysDate.getFullYear() //current year YYYY
-  records = []
-  const courses = await Course.find({})
-  var courseTeachings
-  var teaching
-
-  for (var i = 0; i < courses.length; i++) {
-    courseTeachings = courses[i].teachings
-    for (var j = 0; j < courseTeachings.length; j++) {
-      teaching = await Teaching.findById({ _id: courseTeachings[j] })
-      teachingStudents = teaching.students
-      records = await Student.find({ '_id': { $in: teachingStudents } });
-
-      for (var y = 0; y < records.length; y++) {
-        courseDate = records[y].updatedAt.toString()
-        yearOfStudentUpdate = courseDate.substring(11, 15)                  // last updated grade in YYYY
-        // console.log(records[y])
-        // yearOfStudentUpdate = 0
+  const todaysDate = new Date();
+  const currentYear = todaysDate.getFullYear(); // current year YYYY
+  
+  const courses = await Course.find({});
+  
+  for (let i = 0; i < courses.length; i++) {
+    const courseTeachings = courses[i].teachings;
+    
+    for (let j = 0; j < courseTeachings.length; j++) {
+      const teaching = await Teaching.findById(courseTeachings[j]);
+      const teachingStudents = teaching.students;
+      const records = await Student.find({ '_id': { $in: teachingStudents } });
+  
+      for (let y = 0; y < records.length; y++) {
+        const courseDate = records[y].updatedAt.toString();
+        const yearOfStudentUpdate = courseDate.substring(11, 15); // last updated grade in YYYY
+        
         if ((currentYear - yearOfStudentUpdate) > teaching.duration) {
-
-          id = records[y].id
-
-
-          // when the duration of teachings grade is smaller than the balance of curr year - the year when the grade of
-          // student was updated
-          // he is removed from the latest teaching by year
-          Teaching.findOneAndUpdate(
+          const id = records[y]._id;
+          
+          // remove student with given id from the current year's teaching
+          await Teaching.findOneAndUpdate(
             { $and: [{ students: { $eq: id } }, { year: { $eq: currentYear } }] },
-            { $pull: { students: id } },
-            { new: true },
-
-            function (err, removedFromUser) {
-
-            })
+            { $pull: { students: id } }
+          );
         }
       }
     }
-
   }
-
+  
   setTimeout(clearStuds, 2147483647);
 }
 
