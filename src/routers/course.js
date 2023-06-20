@@ -58,7 +58,7 @@ const upload = multer({
       res.status(400).send('Error uploading file: ' + err.message);
     } else {
       // An unknown error occurred.
-      res.status(500).send(err.message + '. Please upload only JSON files.');
+      res.status(500).send(err.message);
 
     }
   });
