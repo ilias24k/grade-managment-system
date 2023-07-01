@@ -15,16 +15,16 @@ router.get('/users/signup', async (req, res) => {
 
 })
 router.post('/users/signup', async (req, res) => {
-    const user = new User(req.body)
-    // console.log(user)
+   
+    const user = new User(req.body)    
     try {
         await user.save()
         const token = await user.generateAuthToken()
         // res.status(201).send({ user, token })  
-        res.redirect('/users/login')             //redirect to main
+        res.redirect('/users/login') // Redirect to login page
 
     } catch (e) {
-        res.status(400).redirect('/users/signup')
+        res.status(400).send({ error: e.message }) // Send error message
 
     }
 

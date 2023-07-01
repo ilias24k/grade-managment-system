@@ -103,14 +103,15 @@
 
                                 <form action="/student/edit/{{_id}}" method="GET">
                                     <input type="hidden" name="teachingId" id="tId" value=" ">
-                                    <button id="button" class="btn btn-outline-primary"><i class="bi bi-person-pencil"></i><i
-                                            onclick="editing({{_id}})">Edit</button>
+                                    <button id="button" class="btn btn-outline-primary"><i
+                                            class="bi bi-person-pencil"></i><i onclick="editing({{_id}})">Edit</button>
                                 </form>
 
 
                                 <form action="/student/teaching/delete/{{_id}}" method="POST">
                                     <input type="hidden" name="teachingId" id="tId2" value=" ">
-                                    <button id="button" class="btn btn-outline-danger"><i class="bi bi-person-person-x"></i><i
+                                    <button id="button" class="btn btn-outline-danger"><i
+                                            class="bi bi-person-person-x"></i><i
                                             onclick="editing({{_id}})">Delete</button>
                                 </form>
 
@@ -156,22 +157,27 @@
                     $('#tId').val(currentCourse);
                     $('#tId2').val(currentCourse);
 
+                    // Get all the form elements on the page
+                    var forms = document.getElementsByTagName("form");
+
+                    var hiddenValue = currentCourse;
+
+                    // Loop through each form element
+                    for (var i = 0; i < forms.length; i++) {
+                        // Check if the form action matches the delete or edit action
+                        var action = forms[i].getAttribute("action");
+                        if (action && (action.startsWith("/student/teaching/delete/") || action.startsWith("/student/edit/"))) {
+                            var hiddenInput = forms[i].querySelector("input[type='hidden']");
+                            hiddenInput.value = hiddenValue;
+                        }
+                    }
+
+
+
                     var analyticalCount = 0;
                     var typicalCount = 0;
 
-                    {{!-- $('#typical').click(function () {
-                        typicalCount++
-                        if (analyticalCount === 1 && typicalCount === 1) {
-                            $('#s2').click();
-                        }
-                    });
 
-                    $('#analytical').click(function () {
-                        analyticalCount++
-                        if (analyticalCount === 1 && typicalCount === 1) {
-                            $('#s2').click();
-                        }
-                    }); --}}
                     var choice
                     var data = {}
 

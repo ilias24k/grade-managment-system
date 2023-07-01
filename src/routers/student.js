@@ -535,6 +535,7 @@ router.get('/course/student/check/:id', auth, async (req, res) => {
 router.post('/student/teaching/delete/:id', auth, async (req, res) => {
     try {
         //checking header and  referer for redirecting purposes
+        console.log('edw')
         console.log(req.params)
         console.log(req.body)
         var teachingId = req.body.teachingId
@@ -575,7 +576,8 @@ router.get('/student/:id', auth, async (req, res) => {
 })
 
 router.get('/student/edit/:id', auth, async (req, res) => {
-
+    console.log('edw 2')
+    console.log(req.params)
     try {
         var user = req.user
 
