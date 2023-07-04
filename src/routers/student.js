@@ -454,7 +454,7 @@ router.patch('/students/upd/', auth, async (req, res) => {
                 })
 
         } else {
-            teaching = await Teaching.findOneAndUpdate({ "year": teachingYear }, { $push: { students: student.id } })
+            teaching = await Teaching.findOneAndUpdate({ "year": teachingYear }, { $addToSet: { students: student.id } })
         }
 
         res.status(201).send({ result: 'redirect', url: '/student' })
@@ -848,52 +848,59 @@ router.put('/student/edit/:id/:teachingId', auth, async (req, res) => {
 
 router.post('/student/delete/:id', auth, async (req, res) => {
     try {
-        //checking header and  referer for redirecting purposes
-
-        var courseId
-        var header = req.headers.referer.toString()
+        // Checking header and referer for redirecting purposes
+        console.log('edw2');
+        
+        let courseId;
+        let header = req.headers.referer.toString();
 
         if (header == 'http://localhost:4000/student') {
-            courseId = null
-
+            courseId = null;
         } else {
-            courseId = req.headers.referer.split('/')[6].slice(0)
+            // Extract the course ID from the URL
+            courseId = req.headers.referer.split('/')[6];
         }
 
-        if (courseId != null) {
-            Student.findOneAndDelete({ _id: req.params.id })
-                .exec(function (err, removed) {
-                    Teaching.findOneAndUpdate(
-                        { students: req.params.id },
-                        // no _id it is array of objectId not object with _ids
-                        { $pull: { students: req.params.id } },
-                        { new: true },
-                        function (err, removedFromUser) {
-
-                        })
-                })
-            res.redirect('/course/view/teaching/' + courseId);
+        if (courseId) {
+            Student.findOneAndDelete({ _id: req.params.id }, (err, removed) => {
+                if (err) {
+                    throw err; // Handle the error here
+                }
+                Teaching.findOneAndUpdate(
+                    { students: req.params.id },
+                    { $pull: { students: req.params.id } },
+                    { new: true },
+                    (err, removedFromUser) => {
+                        if (err) {
+                            throw err; // Handle the error here
+                        }
+                        res.redirect('/course/view/teaching/' + courseId);
+                    }
+                );
+            });
         } else {
-
-            Student.findOneAndDelete({ _id: req.params.id })
-                .exec(function (err, removed) {
-                    Teaching.findOneAndUpdate(
-                        { students: req.params.id },
-                        // no _id it is array of objectId not object with _ids
-                        { $pull: { students: req.params.id } },
-                        { new: true },
-                        function (err, removedFromUser) {
-
-                        })
-                })
-
-            res.redirect('/student');
+            Student.findOneAndDelete({ _id: req.params.id }, (err, removed) => {
+                if (err) {
+                    throw err; // Handle the error here
+                }
+                Teaching.findOneAndUpdate(
+                    { students: req.params.id },
+                    { $pull: { students: req.params.id } },
+                    { new: true },
+                    (err, removedFromUser) => {
+                        if (err) {
+                            throw err; // Handle the error here
+                        }
+                        res.redirect('/student');
+                    }
+                );
+            });
         }
-
     } catch (e) {
-        res.status(500).send()
+        res.status(500).send();
     }
-})
+});
+
 
 // functions to get grades  ids and names 
 

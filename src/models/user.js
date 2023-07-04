@@ -3,7 +3,7 @@ const validator = require('validator')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
-const userSchema = new mongoose.Schema( {
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -33,8 +33,14 @@ const userSchema = new mongoose.Schema( {
         }
 
     },
-    
-    tokens:[{
+    courses: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Course'
+        }
+      ],
+
+    tokens: [{
         token: {
             type: String,
             required: true
@@ -42,16 +48,16 @@ const userSchema = new mongoose.Schema( {
     }]
 })
 
-userSchema.statics.findByCredentials = async (email, password) =>{
-    const user = await User.findOne({ email})
+userSchema.statics.findByCredentials = async (email, password) => {
+    const user = await User.findOne({ email })
 
-    if(!user){
+    if (!user) {
         throw new Error('unable to login')
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
 
-    if(!isMatch){
+    if (!isMatch) {
         throw new Error('unable to login')
     }
 
@@ -60,9 +66,9 @@ userSchema.statics.findByCredentials = async (email, password) =>{
 
 userSchema.methods.generateAuthToken = async function () {
     const user = this
-    const token = jwt.sign({_id: user._id.toString() }, 'grademanagment')
+    const token = jwt.sign({ _id: user._id.toString() }, 'grademanagment')
 
-    user.tokens = user.tokens.concat({ token})
+    user.tokens = user.tokens.concat({ token })
     await user.save()
     return token
 }
@@ -78,13 +84,13 @@ userSchema.pre('save', async function (next) {
     next()
 })
 
-userSchema.methods.toJSON =  function () {
+userSchema.methods.toJSON = function () {
     const user = this
     const userObject = user.toObject()
     delete userObject.password
     delete userObject.tokens
     return userObject
-} 
+}
 
 const User = mongoose.model('User', userSchema)
 

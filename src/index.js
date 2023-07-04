@@ -123,31 +123,36 @@ const removedStudents = []; // create an array to hold removed students
 async function clearStuds() {
   const todaysDate = new Date();
   const currentYear = todaysDate.getFullYear(); // current year YYYY
-  
+
+  const removedStudents = [];
+
   const courses = await Course.find({});
-  
+
   for (let i = 0; i < courses.length; i++) {
     const courseTeachings = courses[i].teachings;
-    
+
     for (let j = 0; j < courseTeachings.length; j++) {
       const teaching = await Teaching.findById(courseTeachings[j]);
+
+      if (!teaching || !teaching.students) {
+        continue; // Skip this iteration if teaching is null or students is null/undefined
+      }
+      
       const teachingStudents = teaching.students;
       const records = await Student.find({ '_id': { $in: teachingStudents } });
-  
+
       for (let y = 0; y < records.length; y++) {
         const courseDate = records[y].updatedAt.toString();
         const yearOfStudentUpdate = courseDate.substring(11, 15); // last updated grade in YYYY
-        
+
         if ((currentYear - yearOfStudentUpdate) > teaching.duration) {
           const id = records[y]._id;
 
-          // Add removed student to array
           removedStudents.push({
             studentId: id,
             teachingId: teaching._id
           });
-          
-          // remove student with given id from the current year's teaching
+
           await Teaching.findOneAndUpdate(
             { $and: [{ students: { $eq: id } }, { year: { $eq: currentYear } }] },
             { $pull: { students: id } }
@@ -156,11 +161,19 @@ async function clearStuds() {
       }
     }
   }
-  
+
   setTimeout(clearStuds, 2147483647);
 }
 
-clearStuds();
+async function runClearStuds() {
+  try {
+    await clearStuds();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+runClearStuds();
 
 
 const jwt = require('jsonwebtoken');

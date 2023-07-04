@@ -80,7 +80,7 @@ const upload = multer({
 
 // uploading courses 
 
-router.post('/upload_course', upload.single("files"), uploadFiles);
+router.post('/upload_course',auth, upload.single("files"), uploadFiles);
 async function uploadFiles(req, res) {
 
     var data = fs.readFileSync(req.file.path)
@@ -118,7 +118,12 @@ async function uploadFiles(req, res) {
                 });
             count = 1;
         }
-        course.save()
+        await course.save()
+        // Store the uploaded course ID to the user's array of course IDs
+       
+        const user = await User.findOne({ _id: req.user._id })
+        user.courses.push(course._id)
+        await user.save()
     }
 
     try {
@@ -131,22 +136,23 @@ async function uploadFiles(req, res) {
     res.send()
 }
 
-//getting all courses
+//getting all courses of signed in user
 
 router.get('/course', auth, async (req, res) => {
-    // console.log(req.cookie)
     try {
-        // console.log(req.user)
-        var user = req.user
-        const courses = await Course.find({})
-        // res.send(courses)
-        var courseList = courses
-
-        res.render('course', { courseList: courseList, user: JSON.stringify(user) })
+      const userId = req.user.id;
+      const user = await User.findById(userId);
+  
+      const courseIds = user.courses;
+      
+      const courses = await Course.find({ _id: { $in: courseIds } });
+  
+      res.render('course', { courseList: courses, user: JSON.stringify(user) });
     } catch (e) {
-        res.status(500).send()
+      res.status(500).send();
     }
-})
+  });
+  
 
 
 //getting specific course students
