@@ -58,7 +58,6 @@ const upload = multer({
       // A Multer error occurred when uploading.
       res.status(400).send('Error uploading file: ' + err.message);
     } else {
-      // An unknown error occurred.
       res.status(500).send(err.message);
 
     }
@@ -271,7 +270,6 @@ router.get('/course/teaching/:id', auth, async (req, res) => {
 
 })
 router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
-
     var index = req.body.index[0].index
     var semester = req.body.rows[index].semester
     var year = req.body.rows[index].year
@@ -367,10 +365,8 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
 })
 
 router.post('/course/teaching/:id', auth, async (req, res) => {
-
+   
     try {
-
-        var nums1 = []
         var nums2 = []
         var insertedTeachingsSemester = []
         var insertedTeachingsYear = []
@@ -380,7 +376,7 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
 
         if (typeof req.body.semester === 'string' && typeof req.body.year === 'string') {
             var y = Number(req.body.year)
-            var s = Number(req.body.semester)
+            var s = req.body.semester
             insertedTeachingsYear.push(y)
             insertedTeachingsSemester.push(s)
 
@@ -388,26 +384,22 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
             insertedTeachingsSemester = req.body.semester
             insertedTeachingsYear = req.body.year
         }
-
-        insertedTeachingsSemester.forEach(str => {
-            nums1.push(Number(str));
-        });
+        
         insertedTeachingsYear.forEach(str => {
             nums2.push(Number(str));
         });
 
         var teaching = {}
-        for (var i = 0; i < nums1.length; i++) {
+        for (var i = 0; i < nums2.length; i++) {
             teaching = {
-                semester: nums1[i],
+                semester: insertedTeachingsSemester[i],
                 year: nums2[i],
-                teacher: [],
+                teacher: [req.user.id],
                 students: [],
                 courseName: course.name,
                 duration: course.gradeMaintainTime
             }
             insertedTeachings.push(teaching)
-
         }
 
         Teaching.insertMany(insertedTeachings, function (error, docs) {
@@ -423,7 +415,6 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
                 );
             })
         });
-
         res.status(201)
         res.redirect('/course/teaching/' + req.params.id)
 
@@ -434,39 +425,31 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
 
 //deleting teaching
 
-router.patch('/course/teaching/delete/:id', auth, async (req, res) => {
-
+router.patch('/course/teaching/teaching/delete/:id', auth, async (req, res) => {
+    console.log('deleteee')
     try {
-        const course = await Course.findById(req.params.id)
-        courseTeachings = course.teachings
+        const course = await Course.findById(req.params.id);
+        const courseTeachings = course.teachings;
 
-        var teaching = await Teaching.findOne({
-            $and: [{ year: { $eq: req.body.year } }, { semester: { $eq: req.body.semester } }]
-        })
-
-        Course.findByIdAndUpdate(
-            req.params.id,
-            { $pull: { "teachings": teaching.id } },
-            { safe: true, upsert: true },
-            function (err, model) {
-                // console.log(model);
-            }
-        );
-        Teaching.findByIdAndDelete(teaching.id, function (err, docs) {
-            // if (err){
-            //     console.log(err)
-            // }
-            // else{
-            //     console.log("Deleted : ", docs);
-            // }
+        const teaching = await Teaching.findOne({
+            year: req.body.year,
+            semester: req.body.semester
         });
 
-        res.status(201).send({ result: 'redirect', url: '/course/teaching/' + req.params.id })
+        await Course.findByIdAndUpdate(
+            req.params.id,
+            { $pull: { teachings: teaching.id } },
+            { safe: true, upsert: true }
+        );
 
+        const deletedTeaching = await Teaching.findByIdAndDelete(teaching.id);
+
+        res.status(201).send({ result: 'redirect', url: '/course/teaching/' + req.params.id });
     } catch (e) {
-        res.status(500).send()
+        res.status(500).send();
     }
-})
+});
+
 router.patch('/course/teaching/lock/:id', auth, async (req, res) => {
 
     try {
@@ -476,8 +459,6 @@ router.patch('/course/teaching/lock/:id', auth, async (req, res) => {
     } catch (error) {
         res.status(500).send()
     }
-
-
 
 })
 
@@ -813,16 +794,20 @@ router.patch('/course/edit/deleteLab/:id', auth, async (req, res) => {
 
 router.post('/course/delete/:id', auth, async (req, res) => {
     try {
-        const course = await Course.findByIdAndDelete(req.params.id)
+        const courseId = req.params.id;
+        const course = await Course.findByIdAndDelete(courseId);
+        const userId = req.user.id;
+        const user = await User.findByIdAndUpdate(userId, { $pull: { courses: courseId } });
 
         if (!course) {
-            return res.status(404).send()
+            return res.status(404).send();
         }
-        res.redirect('/course');
+         res.redirect('/course');
     } catch (e) {
-        res.status(500).send()
+        res.status(500).send();
     }
-})
+});
+
 
 // functions to get grades  ids and names 
 
@@ -836,8 +821,6 @@ function DBnames(arr1) {
             names.push(arr1[i])
         }
     }
-
-
 
     return names
 }
@@ -864,7 +847,6 @@ function DbIds(arr1) {
         for (var i = 0; i < arr1.length; i += 3) {
             ids.push(arr1[i])
         }
-
     }
 
     return ids
@@ -886,7 +868,6 @@ function boundsIds(arr) {
             ids2.push(Number(str));
         });
     }
-
 
     return ids2
 }
@@ -917,7 +898,6 @@ function bounds(arr) {
         bounds2.push(Number(str));
     });
     return bounds2
-
 
 }
 

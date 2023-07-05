@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const teachingSchema = new mongoose.Schema({
     
     semester: {
-        type: Number       
+        type: String       
     },
     year:{
         type: Number        

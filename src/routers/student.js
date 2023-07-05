@@ -150,9 +150,6 @@ router.get('/download/analytical/:id', async function (req, res) {
                 }
             })
         }
-
-
-
         if (typeof students[i].finalGradeLab !== "undefined" && typeof students[i].finalGradeTh !== "undefined") {
             await Student.findByIdAndUpdate({ _id: students[i]._id }, {
                 $set: {
@@ -175,13 +172,8 @@ router.get('/download/analytical/:id', async function (req, res) {
                     "frozen.theory": students[i].finalGradeTh
                 }
             })
-
         }
-
     }
-
-
-
     workbook.xlsx.writeFile('analytical/analytical.xlsx')
         .then(function () {
             const fileLoc = path.join(__dirname, '../../analytical/analytical.xlsx')
@@ -189,7 +181,6 @@ router.get('/download/analytical/:id', async function (req, res) {
 
             res.download(file);
         });
-
 });
 
 // typical grade excel file
@@ -229,8 +220,6 @@ router.get('/download/typical/:id', async function (req, res) {
         } else {
             obj.total = students[i].finalGradeTh * course.theoryWeight / 100 + students[i].finalGradeLab * course.labWeight / 100
         }
-
-
         total_grade = await Student.findByIdAndUpdate({ _id: students[i]._id }, {
             $set: {
                 "totalGrade": obj.total
@@ -257,7 +246,6 @@ router.get('/download/typical/:id', async function (req, res) {
                     "frozen.theory": students[i].finalGradeTh
                 }
             })
-
         }
     }
 
@@ -267,140 +255,144 @@ router.get('/download/typical/:id', async function (req, res) {
     var wb = xlsx.utils.book_new()
     xlsx.utils.book_append_sheet(wb, binaryWS, 'Binary values')
     xlsx.writeFile(wb, 'typical/typical.xlsx');
-
     const fileLoc = path.join(__dirname, '../../typical/typical.xlsx')
-
     const file = fileLoc;
     // console.log(file)
-
     res.download(file);
 });
 
 
 // upload students
 router.post('/upload_students', upload.single("files"), uploadFiles);
+
 async function uploadFiles(req, res) {
-
     try {
-
-        const workbook = xlsx.readFile(req.file.path)
+        const workbook = xlsx.readFile(req.file.path);
         var sheet_name_list = workbook.SheetNames;
-        //convert xlsx to json
         var students = [];
+        var course = await Course.findOneAndUpdate({ "teachings": req.body.teaching_id })
+
         sheet_name_list.forEach(function (y) {
             var worksheet = workbook.Sheets[y];
             var headers = {};
             var data = [];
+
             for (z in worksheet) {
                 if (z[0] === '!') continue;
-                //parse out the column, row, and value
                 var col = z.substring(0, 1);
                 var row = parseInt(z.substring(1));
                 var value = worksheet[z].v;
-
-                //store header names
                 if (row == 1) {
                     headers[col] = value;
                     continue;
                 }
-
                 if (!data[row]) data[row] = {};
                 data[row][headers[col]] = value;
             }
-            //drop those first two rows which are empty
             data.shift();
             data.shift();
-            // console.log(data);
-
-            students = data
+            students.push(...data);
         });
-
         Student.insertMany(students, function (error, docs) {
-            students.createdAt;
-            students.updatedAt;
+            if (error) {
+                res.status(500).send(error);
+                return;
+            }
+            //adding students to teaching and course 
 
-            docs.forEach(function (docs) {
+            docs.forEach(function (doc) {
                 Teaching.findByIdAndUpdate(
                     req.body.teaching_id,
-                    { $push: { "students": docs } },
+                    { $push: { "students": doc } },
                     { safe: true, upsert: true },
                     function (err, model) {
-                        // console.log(err);
+                        if (err) {
+                            console.log(err);
+                        }
                     }
                 );
-            })
+                Course.findByIdAndUpdate(
+                    course.id,
+                    { $push: { "students": doc } },
+                    { safe: true, upsert: true },
+                    function (err, model) {
+                        if (err) {
+                            console.log(err);
+                        }
+                    }
+                );
+            });
         });
-
-
-        // await student.save()
-        // res.status(201)
-        res.redirect('/course/view/teaching/' + req.body.teaching_id)
+        res.redirect('/course/view/teaching/' + req.body.teaching_id);
     } catch (e) {
-        res.status(400).send(e)
+        res.status(400).send(e);
     }
-    res.send()
 }
-// getting all students of all courses
+
+
 router.get('/student', auth, async (req, res) => {
-
     try {
-        var user = req.user
-
-        // const students = await Student.find({})
-        // var teachings = await Teaching.find({})
-        var courses = await Course.find({})
-        var teachingStudents = []
-        var data = []
-        var object = {}
-        var teachingYears = []
-        var curStud
-        var curCourse
-        var curAM
-        var curEmail
-        var year
-
-        var students = await Student.find({})
-        var teachings = await Teaching.find({})
-        var teachingStudents = teachings.students
-
-
+        var user = req.user;
+        var userCoursesIds = user.courses;
+        var courses = [];
+        for (let i = 0; i < userCoursesIds.length; i++) {
+            let course = await Course.findById(userCoursesIds[i]);
+            courses.push(course);
+        }
+        var teachingStudents = [];
+        var data = [];
+        var object = {};
+        var teachingYears = [];
+        var curStud;
+        var curCourse;
+        var curAM;
+        var curEmail;
+        var year;
+        var students = [];
+        for (let i = 0; i < courses.length; i++) {
+            students = students.concat(courses[i].students);
+        }
         for (var i = 0; i < students.length; i++) {
+            var teaching = await Teaching.find({ 'students': students[i] });
+            let student = await Student.findById(students[i]);
 
-            var teaching = await Teaching.find({ 'students': students[i].id })
-            curStud = students[i].name
-            curEmail = students[i].email
-            curAM = students[i].AM
-            studId = students[i].id
-
-            for (var y = 0; y < teaching.length; y++) {
-                const set = new Set();
-
-                year = teaching[y].year
-                if (teaching.some((object) => set.size === (set.add(object.property), set.size))) {
-                    teachingYears.push(teaching[y].year)
-                    curCourse = teaching[y].courseName
-                } else {
-                    teachingYears = year
-                    curCourse = teaching[y].courseName
-                }
-
+            // Add a null check for the student object
+            if (student !== null) {
+                curStud = student.name;
+                curEmail = student.email;
+                curAM = student.AM;
+            } else {                
+                continue; 
             }
-            object = { curAM, curStud, curEmail, curCourse, teachingYears, studId }
-            data.push(object)
-
+            curStud = student.name;
+            curEmail = student.email;
+            curAM = student.AM;
+            let studId = student.id; 
+            for (var y = 0; y < teaching.length; y++) {
+                teachingYears = []; 
+                year = teaching[y].year;
+              
+                if (teaching.some((obj) => obj.property === year)) {
+                    teachingYears.push(year);
+                    curCourse = teaching[y].courseName;
+                } else {
+                    teachingYears = [year];
+                    curCourse = teaching[y].courseName;
+                }
+            }
+            object = { curAM, curStud, curEmail, curCourse, teachingYears, studId };
+            data.push(object);
         }
 
-        // console.log(data.length)
-        // console.log(data)
-
-        res.render('allCourseStudents', { data: data, user: JSON.stringify(user) })
-
-        // res.send(students)
+        res.render('allCourseStudents', { data: data, user: { user: JSON.stringify(user) } }); // Fix: Wrap user in an object
     } catch (e) {
-        console.log(e)
-        res.status(500).send()
+        console.log(e);
+        res.status(500).send();
     }
-})
+});
+
+
+
 //getting all courses students
 router.get('/course/students/:id', auth, async (req, res) => {
     try {
@@ -535,9 +527,8 @@ router.get('/course/student/check/:id', auth, async (req, res) => {
 router.post('/student/teaching/delete/:id', auth, async (req, res) => {
     try {
         //checking header and  referer for redirecting purposes
-        console.log('edw')
-        console.log(req.params)
-        console.log(req.body)
+        // console.log(req.params)
+        // console.log(req.body)
         var teachingId = req.body.teachingId
         var studentId = req.params.id
 
@@ -833,15 +824,11 @@ router.put('/student/edit/:id/:teachingId', auth, async (req, res) => {
         }
         if (!student) {
             // return res.status(404).send()
-
             // console.log(student)
         }
-
     } catch (e) {
         // res.status(400).send(e)
-
     }
-
 })
 
 //deleting students
@@ -850,17 +837,14 @@ router.post('/student/delete/:id', auth, async (req, res) => {
     try {
         // Checking header and referer for redirecting purposes
         console.log('edw2');
-        
         let courseId;
         let header = req.headers.referer.toString();
-
         if (header == 'http://localhost:4000/student') {
             courseId = null;
         } else {
             // Extract the course ID from the URL
             courseId = req.headers.referer.split('/')[6];
         }
-
         if (courseId) {
             Student.findOneAndDelete({ _id: req.params.id }, (err, removed) => {
                 if (err) {

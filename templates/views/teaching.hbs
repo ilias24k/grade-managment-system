@@ -1,7 +1,4 @@
 <!DOCTYPE html>
-
-
-
 <html>
 
 <head>
@@ -9,9 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
-
     <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
         crossorigin="anonymous"></script>
@@ -19,31 +14,24 @@
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
 
-
     <title>Grade Mangment</title>
 
-
 <body>
-
     <div class="main-content">
-
         {{>main passThisToView=user}}
 
         <div class="container pt-5 pb-5">
             <!-- Content here -->
 
             <body>
-
                 <div class="row">
                     <div class="col-6">
                         <h1>Teachings</h1>
                         <br>
-
                     </div>
                     <div class="col-6 d-flex justify-content-end">
                         <button id="s1" type="button" onclick='childrenRow();'
                             class="btn btn-primary align-self-center"><i class="bi bi-plus"></i><i>Add Row</button>
-
                     </div>
                 </div>
 
@@ -69,11 +57,7 @@
 
                                 <td class="text-end">
 
-
                                     <div class="text-end" id="myForm">
-
-
-
 
                                         <span>Select a Teacher: </span>
                                         <select name="teacher_name" id="teacher_name" onchange="getComboA(this)">
@@ -92,39 +76,30 @@
                                             <option>2 years</option>
                                             <option>3 years</option>
                                             <option></option>
-                                            
+
                                         </select>
 
-                                         <form></form>
+                                        <form></form>
                                         <form method="GET" action="/course/view/teaching/{{_id}}">
-                                            <input type="submit"class="btn btn-outline-info"  value="View Students" />
+                                            <input type="submit" class="btn btn-outline-info" value="View Students" />
                                         </form>
 
 
-                                        <button id="delete" class="btn btn-outline-danger"><i class="bi bi-x"></i>
-                                            <i onClick="sent('{{year}}', {{semester}})">Delete
+                                        <button id="delete" class="btn btn-outline-danger" oncontextmenu="return false;"><i class="bi bi-x"></i>
+                                            <i onClick="sent({{year}}, '{{semester}}')">Delete
                                         </button>
 
-                                     
                                     </div>
 
                                 </td>
                             </tr>
                             {{/each}}
-
                     </table>
-
                     <button type="submit" class="btn btn-primary">Submit</button>
-
                 </form>
-
             </body>
-
         </div>
-
     </div>
-
-
 
     <script>
 
@@ -133,15 +108,14 @@
             var currentCourse = window.location.pathname.split("/").pop()
             var teacher
             var duration
-            if(value =='1 year'|| value =='2 years'|| value == '3 years' || value == 'no time limit'){
+            if (value == '1 year' || value == '2 years' || value == '3 years' || value == 'no time limit') {
                 duration = value
-            } else{ 
+            } else {
                 teacher = value
             }
             var data = {}
             var rows = []
             var index = []
-
             var selectedIndex
 
             $("#childTable").on('change', 'tr select', function (e) {
@@ -152,12 +126,10 @@
                 });
 
                 $('#childTable tbody tr').each(function (row, tr) {
-
                     rows.push({
                         semester: $(tr).find('td:eq(0)').text(),
                         year: $(tr).find('td:eq(1)').text()
                     });
-
                 });
 
                 data = { index: index, rows, teacher: teacher, duration: duration }
@@ -173,36 +145,33 @@
                         }
                     }
                 })
-
-
             });
 
         }
-
 
         function childrenRow() {
 
             $('#childTable').find('tbody').append('<tr><th scope="semester"><input type="text" name="semester" required class="form-control1" />'
                 + '</th><td class="col-sm-4"><input type="text" name="year" required class="form-control1" /> </td><td></tr>');
         }
-
         function sent(year, semester) {
-
-            var currentCourse = window.location.pathname.split("/").pop()
-            data = { year, semester }
+            var currentCourse = window.location.pathname.split("/").pop();
+            data = { year, semester };
+            console.log(data);
             $.ajax({
-                url: '/course/teaching/delete/' + currentCourse,
+                url: '/course/teaching/teaching/delete/' + currentCourse,
                 type: 'PATCH',
-                data: (data),
+                data: data,
                 success: function (data) {
                     if (data.result == 'redirect') {
                         //redirecting to main page from here.
                         window.location.replace(data.url);
                     }
                 }
-            })
+            });
         }
 
+      
     </script>
 </body>
 
