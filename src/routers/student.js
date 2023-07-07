@@ -333,6 +333,7 @@ async function uploadFiles(req, res) {
 router.get('/student', auth, async (req, res) => {
     try {
         var user = req.user;
+        var role = user.role
         var userCoursesIds = user.courses;
         var courses = [];
         for (let i = 0; i < userCoursesIds.length; i++) {
@@ -383,8 +384,8 @@ router.get('/student', auth, async (req, res) => {
             object = { curAM, curStud, curEmail, curCourse, teachingYears, studId };
             data.push(object);
         }
-
-        res.render('allCourseStudents', { data: data, user: { user: JSON.stringify(user) } }); // Fix: Wrap user in an object
+      
+        res.render('allCourseStudents', { data: data, user: { user: JSON.stringify(user) },role: role  }); 
     } catch (e) {
         console.log(e);
         res.status(500).send();
@@ -397,7 +398,6 @@ router.get('/student', auth, async (req, res) => {
 router.get('/course/students/:id', auth, async (req, res) => {
     try {
         var user = req.user
-
         var course = await Course.findById(req.params.id)
         var teachingsList = course.teachings
         var studentListId = []
@@ -406,7 +406,6 @@ router.get('/course/students/:id', auth, async (req, res) => {
             for (var y = 0; y < teaching.students.length; y++) {
                 studentListId.push(teaching.students[y])
             }
-
         }
         var studentList = []
         for (var i = 0; i < studentListId.length; i++) {

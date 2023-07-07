@@ -41,61 +41,58 @@ router.get('/upload_course', async (req, res) => {
 
 const upload = multer({
     storage: multer.diskStorage({}),
-    fileFilter: function(req, file, cb) {
-      const ext = path.extname(file.originalname);
-      if (ext !== '.json') {
-        return cb(new Error('Only JSON files are allowed'))
-      }
-      cb(null, true)
+    fileFilter: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        if (ext !== '.json') {
+            return cb(new Error('Only JSON files are allowed'))
+        }
+        cb(null, true)
     }
-  });
-  
-  router.post('/course', upload.single("files"), uploadFiles);
-  
-  // error handling middleware for file upload 
-  router.use(function (err, req, res, next) {
+});
+
+router.post('/course', upload.single("files"), uploadFiles);
+
+// error handling middleware for file upload 
+router.use(function (err, req, res, next) {
     if (err instanceof multer.MulterError) {
-      // A Multer error occurred when uploading.
-      res.status(400).send('Error uploading file: ' + err.message);
+        // A Multer error occurred when uploading.
+        res.status(400).send('Error uploading file: ' + err.message);
     } else {
-      res.status(500).send(err.message);
+        res.status(500).send(err.message);
 
     }
-  });
-  
-  function uploadFiles(req, res) {
+});
+
+function uploadFiles(req, res) {
     // read the uploaded file
     const file = req.file;
     if (!file) return res.status(400).send('No file uploaded.');
-    
+
     // parse the JSON data and save to database
     const courseData = JSON.parse(file.buffer);
     // save course to database...
-    
+
     // redirect to course page
     res.redirect('/course');
-  }
-  
+}
+
 
 // uploading courses 
 
-router.post('/upload_course',auth, upload.single("files"), uploadFiles);
+router.post('/upload_course/:id', auth, upload.single("files"), uploadFiles);
 async function uploadFiles(req, res) {
-
+    
     var data = fs.readFileSync(req.file.path)
     const newDataJSON = data.toString()
     const newData = JSON.parse(newDataJSON)
-
     var course
     var count = 1
-
     for (var i = 0; i < newData.length; i++) {
         course = new Course(newData[i])
         Object.keys(newData[i].theory)
             .forEach(function eachKey(key) {
                 course.theory.id.push(count)
                 course.theory.names.push(key)
-
                 course.theory.weight.push(newData[i].theory[key])
                 course.theoryBounds.bound.push(5)
                 course.theoryBounds.id.push(count)
@@ -103,13 +100,11 @@ async function uploadFiles(req, res) {
             });
         // console.log(course.theory.bound)
         count = 1;
-
         if (newData[i].lab) {
             Object.keys(newData[i].lab)
                 .forEach(function eachKey(key) {
                     course.lab.id.push(count)
                     course.lab.names.push(key)
-
                     course.lab.weight.push(newData[i].lab[key])
                     course.labBounds.bound.push(5)
                     course.labBounds.id.push(count)
@@ -119,8 +114,7 @@ async function uploadFiles(req, res) {
         }
         await course.save()
         // Store the uploaded course ID to the user's array of course IDs
-       
-        const user = await User.findOne({ _id: req.user._id })
+        const user = await User.findOne({ _id: req.params.id })
         user.courses.push(course._id)
         await user.save()
     }
@@ -139,20 +133,26 @@ async function uploadFiles(req, res) {
 
 router.get('/course', auth, async (req, res) => {
     try {
-      const userId = req.user.id;
-      const user = await User.findById(userId);
-  
-      const courseIds = user.courses;
-      
-      const courses = await Course.find({ _id: { $in: courseIds } });
-      var role = user.role
-  
-      res.render('course', { courseList: courses, user: JSON.stringify(user),role: role });
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+
+        let courses;
+
+        if (user.role === 'admin') {
+            courses = await Course.find();
+        } else if (user.role === 'user') {
+            const courseIds = user.courses;
+            courses = await Course.find({ _id: { $in: courseIds } });
+        } else {
+            throw new Error('Invalid user role');
+        }
+
+        res.render('course', { courseList: courses, user: JSON.stringify(user.id), role: user.role });
     } catch (e) {
-      res.status(500).send();
+        res.status(500).send();
     }
-  });
-  
+});
+
 
 
 //getting specific course students
@@ -160,15 +160,11 @@ router.get('/course', auth, async (req, res) => {
 router.get('/course/:id', auth, async (req, res) => {
     const _id = req.params.id
     var user = req.user
-
     try {
         var students = [];
-
         const course = await Course.findById(_id)
         students = course.students
-
         const records = await Student.find({ '_id': { $in: students } });
-
         if (!course) {
             return res.status(404).send()
         }
@@ -188,13 +184,10 @@ router.get('/course/edit/:id', auth, async (req, res) => {
 
     try {
         const course = await Course.findById(_id)
-
         theoryIDs = course.theory.id
-
         theory = course.theory.names
         theoryWeights = course.theory.weight
         var theoryBounds = course.theoryBounds.bound
-
         labIDs = course.lab.id
         generalTheoryWeight = course.theoryWeight
         generalLabWeight = course.labWeight
@@ -214,7 +207,6 @@ router.get('/course/edit/:id', auth, async (req, res) => {
             obj.bound = theoryBounds[i]
             arr.push(obj);
         })
-
         lab.forEach(function (x, y) {
             var obj = {};
             obj.id = labIDs[y]
@@ -223,7 +215,6 @@ router.get('/course/edit/:id', auth, async (req, res) => {
             obj.bound = labBounds[y]
             arr2.push(obj);
         })
-
         if (!course) {
             return res.status(404).send()
         }
@@ -234,7 +225,6 @@ router.get('/course/edit/:id', auth, async (req, res) => {
     } catch (e) {
         res.status(500).send()
     }
-
 })
 
 router.get('/course/teaching/:id', auth, async (req, res) => {
@@ -252,7 +242,6 @@ router.get('/course/teaching/:id', auth, async (req, res) => {
         var teachings = course.teachings
         teachingList = await Teaching.find({ '_id': { $in: teachings } });
 
-
         for (var i = 0; i < teachingList.length; i++) {
             for (var j = 0; j < usersList.length; j++) {
 
@@ -261,9 +250,7 @@ router.get('/course/teaching/:id', auth, async (req, res) => {
                 }
             }
         }
-
         res.render('teaching', { teachingList: teachingList, usersList: usersList, user: JSON.stringify(user) })
-
         // res.send(students)
     } catch (e) {
         res.status(500).send()
@@ -276,8 +263,6 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
     var year = req.body.rows[index].year
     var teacher = req.body.teacher
     var duration = req.body.duration
-
-
     var user = await User.findOne({ "name": teacher })
 
     try {
@@ -287,7 +272,6 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
         var teaching = await Teaching.findOne({
             $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
         })
-
         if (duration == '1 year') {
             duration = 1
             teaching = await Teaching.findOneAndUpdate({
@@ -297,8 +281,6 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
                 function (err, model) {
                     // console.log();
                 })
-
-
         } else if (duration == '2 years') {
             duration = 2
             teaching = await Teaching.findOneAndUpdate({
@@ -308,7 +290,6 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
                 function (err, model) {
                     // console.log();
                 })
-
         } else if (duration == '3 years') {
             duration = 3
             teaching = await Teaching.findOneAndUpdate({
@@ -320,7 +301,6 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
                 })
 
         } else if (duration == 'no time limit') {
-
             duration = 100
             teaching = await Teaching.findOneAndUpdate({
                 $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
@@ -331,8 +311,6 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
                 })
             return
         }
-
-
         if (teacher == 'remove current teacher') {
             teaching = await Teaching.findOneAndUpdate({
                 $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
@@ -356,8 +334,6 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
                     // console.log();
                 })
         }
-
-
         res.status(201).send({ result: 'redirect', url: '/course/teaching/' + req.params.id })
 
     } catch (e) {
@@ -366,13 +342,12 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
 })
 
 router.post('/course/teaching/:id', auth, async (req, res) => {
-   
+
     try {
         var nums2 = []
         var insertedTeachingsSemester = []
         var insertedTeachingsYear = []
         var insertedTeachings = []
-
         var course = await Course.findById(req.params.id)
 
         if (typeof req.body.semester === 'string' && typeof req.body.year === 'string') {
@@ -385,7 +360,7 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
             insertedTeachingsSemester = req.body.semester
             insertedTeachingsYear = req.body.year
         }
-        
+
         insertedTeachingsYear.forEach(str => {
             nums2.push(Number(str));
         });
@@ -402,9 +377,7 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
             }
             insertedTeachings.push(teaching)
         }
-
         Teaching.insertMany(insertedTeachings, function (error, docs) {
-
             docs.forEach(function (docs) {
                 Course.findByIdAndUpdate(
                     req.params.id,
@@ -418,7 +391,6 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
         });
         res.status(201)
         res.redirect('/course/teaching/' + req.params.id)
-
     } catch (e) {
         res.status(500).send()
     }
@@ -431,21 +403,17 @@ router.patch('/course/teaching/teaching/delete/:id', auth, async (req, res) => {
     try {
         const course = await Course.findById(req.params.id);
         const courseTeachings = course.teachings;
-
         const teaching = await Teaching.findOne({
             year: req.body.year,
             semester: req.body.semester
         });
-
         await Course.findByIdAndUpdate(
             req.params.id,
             { $pull: { teachings: teaching.id } },
             { safe: true, upsert: true }
         );
-
         const deletedTeaching = await Teaching.findByIdAndDelete(teaching.id);
-
-        res.status(201).send({ result: 'redirect', url: '/course/teaching/' + req.params.id });
+       res.status(201).send({ result: 'redirect', url: '/course/teaching/' + req.params.id });
     } catch (e) {
         res.status(500).send();
     }
@@ -803,7 +771,7 @@ router.post('/course/delete/:id', auth, async (req, res) => {
         if (!course) {
             return res.status(404).send();
         }
-         res.redirect('/course');
+        res.redirect('/course');
     } catch (e) {
         res.status(500).send();
     }

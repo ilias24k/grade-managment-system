@@ -4,6 +4,7 @@ const User = require('../models/user')
 const { use, route } = require('./home')
 const auth = require('../middleware/auth')
 const hbs = require('hbs')
+const async = require('hbs/lib/async')
 
 
 // handlebars helper function to check if user is admin 
@@ -31,6 +32,8 @@ router.post('/users/signup', async (req, res) => {
 
         if (isFirstUser) {
             user.role = 'admin'; // Set role as admin for the first user
+        }else{
+            user.role = 'user'
         }
 
         await user.save();
@@ -103,12 +106,10 @@ router.patch('/users/:id', async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdates = ['name', 'email', 'password', 'age']
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
-
     if (!isValidOperation) {
         return res.status(400).send({ error: ' invalid updates' })
     }
     try {
-
         const user = await User.findById(req.params.id)
         updates.forEach((update) => user[update] = req.body[update])
         await user.save()
@@ -136,6 +137,21 @@ router.delete('/users/:id', async (req, res) => {
         res.status(500).send()
     }
 })
+
+router.get('/users', auth, async (req, res) => {
+    try {
+        const user = req.user
+        const users = await User.find({ role: 'user' });
+        // console.log(users)
+
+        
+
+        res.render('users',{users: users,user: JSON.stringify(user), role: user.role});
+    } catch (e) {
+        res.status(500).send();
+    }
+});
+
 
 
 
