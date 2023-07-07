@@ -3,6 +3,15 @@ const router = new express.Router()
 const User = require('../models/user')
 const { use, route } = require('./home')
 const auth = require('../middleware/auth')
+const hbs = require('hbs')
+
+
+// handlebars helper function to check if user is admin 
+
+hbs.registerHelper('isAdmin', function (user, options) {
+    return user.isAdmin ? options.fn(this) : options.inverse(this);
+});
+
 
 router.get('/users/signup', async (req, res) => {
 
@@ -15,31 +24,34 @@ router.get('/users/signup', async (req, res) => {
 
 })
 router.post('/users/signup', async (req, res) => {
-   
-    const user = new User(req.body)    
+    const user = new User(req.body);
+
     try {
-        await user.save()
-        const token = await user.generateAuthToken()
-        // res.status(201).send({ user, token })  
-        res.redirect('/users/login') // Redirect to login page
+        const isFirstUser = await User.countDocuments() === 0;
 
+        if (isFirstUser) {
+            user.role = 'admin'; // Set role as admin for the first user
+        }
+
+        await user.save();
+        const token = await user.generateAuthToken();
+        res.redirect('/users/login'); // Redirect to login page
     } catch (e) {
-        res.status(400).send({ error: e.message }) // Send error message
-
+        res.status(400).send({ error: e.message }); // Send error message
     }
+});
 
-})
+
 
 router.get('/users/login', async (req, res) => {
-
     try {
-
         res.render('login')
     } catch (e) {
         res.status(500).send()
     }
 
 })
+
 router.post('/users/login', async (req, res) => {
     // console.log(req.body.email)
     try {
@@ -53,7 +65,6 @@ router.post('/users/login', async (req, res) => {
         res.status(400).redirect('/users/login')
         // res.status(400).send()
     }
-
 })
 
 router.post('/users/logout', auth, async (req, res) => {
@@ -62,7 +73,6 @@ router.post('/users/logout', auth, async (req, res) => {
         // console.log(req.cookie)
         req.user.tokens = req.user.tokens.filter((token) => {
 
-           
             return token.token !== req.cookie
         })
         res.clearCookie('cookie name')
@@ -77,7 +87,6 @@ router.post('/users/logout', auth, async (req, res) => {
 
 router.get('/users/:id', async (req, res) => {
     const _id = req.params.id
-
     try {
         const user = await User.findById(_id)
         if (!user) {
@@ -87,7 +96,6 @@ router.get('/users/:id', async (req, res) => {
     } catch (e) {
         res.status(500).send()
     }
-
 })
 
 router.patch('/users/:id', async (req, res) => {
@@ -99,7 +107,6 @@ router.patch('/users/:id', async (req, res) => {
     if (!isValidOperation) {
         return res.status(400).send({ error: ' invalid updates' })
     }
-
     try {
 
         const user = await User.findById(req.params.id)

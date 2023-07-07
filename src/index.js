@@ -51,7 +51,6 @@ hbs.registerHelper("checkFlag", function (value1, value2, options) {
 });
 
 
-
 var dir = './analytical';
 var dir2 = './typical';
 

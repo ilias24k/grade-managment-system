@@ -39,6 +39,9 @@ const userSchema = new mongoose.Schema({
           ref: 'Course'
         }
       ],
+      role : { type: String, enum: {
+        values: ['user', 'admin']
+      }},
 
     tokens: [{
         token: {

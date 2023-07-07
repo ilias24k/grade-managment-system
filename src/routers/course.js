@@ -145,8 +145,9 @@ router.get('/course', auth, async (req, res) => {
       const courseIds = user.courses;
       
       const courses = await Course.find({ _id: { $in: courseIds } });
+      var role = user.role
   
-      res.render('course', { courseList: courses, user: JSON.stringify(user) });
+      res.render('course', { courseList: courses, user: JSON.stringify(user),role: role });
     } catch (e) {
       res.status(500).send();
     }
