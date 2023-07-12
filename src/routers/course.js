@@ -129,6 +129,7 @@ async function uploadFiles(req, res) {
     res.send()
 }
 
+
 //getting all courses of signed in user
 
 router.get('/course', auth, async (req, res) => {
@@ -146,7 +147,6 @@ router.get('/course', auth, async (req, res) => {
         } else {
             throw new Error('Invalid user role');
         }
-
         res.render('course', { courseList: courses, user: JSON.stringify(user.id), role: user.role });
     } catch (e) {
         res.status(500).send();

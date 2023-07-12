@@ -125,14 +125,16 @@ router.patch('/users/:id', async (req, res) => {
     }
 })
 
-router.delete('/users/:id', async (req, res) => {
+//deleting user
+
+router.post('/users/delete/:id', async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id)
 
         if (!user) {
             return res.status(404).send()
         }
-        res.send(user)
+        res.redirect('/users');
     } catch (e) {
         res.status(500).send()
     }
