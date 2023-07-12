@@ -142,12 +142,11 @@ router.post('/users/delete/:id', async (req, res) => {
 
 router.get('/users', auth, async (req, res) => {
     try {
-        const user = req.user
+        const user = req.user;
+        if (user.role !== 'admin') {
+            return res.status(403).send('Unauthorized');
+        }
         const users = await User.find({ role: 'user' });
-        // console.log(users)
-
-        
-
         res.render('users',{users: users,user: JSON.stringify(user), role: user.role});
     } catch (e) {
         res.status(500).send();
