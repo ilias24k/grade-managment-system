@@ -25,22 +25,20 @@
                     {{#each users}}
                     <tr>
                         <td>{{name}}</td>
-                        <td>{{gradeMaintainTime}}</td>
+                        <td>{{courses}}</td>
                         <td class="text-end">
                             <form id="course_upload_form_{{_id}}" action="/upload_course/{{_id}}" method="POST"
                                 enctype="multipart/form-data">
                                 <input type="hidden" id="fileID" name="custId" value="{{_id}}">
                                 <input type="file" accept=".json" id="myCourse_{{_id}}"
-                                    onchange="document.getElementById('course_upload_form_{{_id}}').submit();" name="files"
-                                    style="display:none;" />
+                                    onchange="document.getElementById('course_upload_form_{{_id}}').submit();"
+                                    name="files" style="display:none;" />
                                 <button type="button" onclick="document.getElementById('myCourse_{{_id}}').click();"
                                     class="btn btn-primary align-self-center">+Upload Course</button>
                             </form>
-                            <form method="GET" action="/course/students/{{_id}}">
-                                <input type="submit" class="btn btn-outline-info" value="View" />
-                            </form>
-                            <a href="/course/edit/{{_id}}" type="button" class="btn btn-outline-warning"><i
-                                    class="bi bi-pencil"></i>Edit</a>
+                            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal"
+                                data-bs-target="#userInfoModal_{{_id}}">View</button>
+                            
                             <form action="/users/delete/{{_id}}" method="POST">
                                 <input type="hidden" name="id" value="{{_id}}">
                                 <button class="btn btn-outline-danger"><i class="bi bi-person-x"></i><i
@@ -50,6 +48,30 @@
                     </tr>
                     {{/each}}
                 </tbody>
+                <!-- Modal for user -->
+                {{#each users}}
+                <div class="modal fade" id="userInfoModal_{{_id}}" tabindex="-1" aria-labelledby="userInfoModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="userInfoModalLabel">{{name}} Info</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p><strong>Name:</strong> {{name}}</p>
+                                <p><strong>Email:</strong> {{email}}</p>
+                                <p><strong>Courses:</strong> {{courses}}</p>
+                                <!-- Add more user info here if needed -->
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
             </table>
         </div>
     </div>

@@ -58,8 +58,10 @@ const courseSchema = new mongoose.Schema({
     students: [{
         type: mongoose.Schema.Types.ObjectId,
         required: false
-    }]
-
+    }],
+    user: {
+        type: String
+    },
 
 })
 

@@ -1,6 +1,7 @@
 const express = require('express')
 const router = new express.Router()
 const User = require('../models/user')
+const Course = require('../models/course')
 const { use, route } = require('./home')
 const auth = require('../middleware/auth')
 const hbs = require('hbs')
@@ -89,17 +90,17 @@ router.post('/users/logout', auth, async (req, res) => {
 
 
 router.get('/users/:id', async (req, res) => {
-    const _id = req.params.id
-    try {
-        const user = await User.findById(_id)
-        if (!user) {
-            return res.status(404).send()
-        }
-        res.send(user)
-    } catch (e) {
-        res.status(500).send()
+  const _id = req.params.id;
+  try {
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(404).send();
     }
-})
+    res.send(user);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
 
 router.patch('/users/:id', async (req, res) => {
 
@@ -147,6 +148,13 @@ router.get('/users', auth, async (req, res) => {
             return res.status(403).send('Unauthorized');
         }
         const users = await User.find({ role: 'user' });
+        for(let i = 0; i<users.length; i++){
+            for (let y = 0; y< users[i].courses.length; y++){
+                var course = await Course.findById(users[i].courses[y])
+                users[i].courses[y] = course.name
+            }
+        }
+
         res.render('users',{users: users,user: JSON.stringify(user), role: user.role});
     } catch (e) {
         res.status(500).send();

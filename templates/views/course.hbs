@@ -26,7 +26,7 @@
                     <div class="col-6">
                         <h1>Courses</h1>
                     </div>
-                    {{#checkFlag role 'admin'}}
+                    {{!-- {{#checkFlag role 'admin'}}
                     <div class="col-6 d-flex justify-content-end">
 
                         <form id="course_upload_form" action="/upload_course" method="POST"
@@ -41,13 +41,17 @@
                     </div>
 
                 </div>
-                {{/checkFlag}}
+                {{/checkFlag}} --}}
 
                 <table class="table table-bordered" id="table">
                     <thead class="thead-dark">
                         <tr>
 
                             <th scope="col">Course Name</th>
+
+                            {{#checkFlag role 'admin'}}
+                            <th scope="col">Teacher</th>
+                            {{/checkFlag}}
 
                             <th scope="col">Grade Maintain Time</th>
                             <th scope="col" class="text-end">Action</th>
@@ -57,6 +61,9 @@
                         {{#each courseList}}
                         <tr>
                             <td>{{name}}</td>
+                            {{#checkFlag ../role 'admin'}}
+                            <td>{{user}}</td>
+                            {{/checkFlag}}
                             <td>{{gradeMaintainTime}}</td>
                             <td class="text-end">
 
@@ -67,8 +74,19 @@
                                     <input type="submit" class="btn btn-outline-info" value="View" />
                                 </form>
 
+                                {{#checkFlag ../role 'admin'}}
+                                <a href="/course/edit/{{_id}}" type="button" class="btn btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>Edit
+                                </a>
+                                {{else}}
+                                {{#checkFlag ../loggedUser user}}
                                 <a href="/course/edit/{{_id}}" type="button" class="btn btn-outline-warning"><i
                                         class="bi bi-pencil"></i>Edit</a>
+                                {{/checkFlag}}
+                                {{/checkFlag}}
+
+
+
                                 {{#checkFlag ../role 'admin'}}
                                 <form action="/course/delete/{{_id}}" method="POST">
                                     <input type="hidden" name="id" value="{{ _id}}">

@@ -81,7 +81,7 @@ function uploadFiles(req, res) {
 
 router.post('/upload_course/:id', auth, upload.single("files"), uploadFiles);
 async function uploadFiles(req, res) {
-    
+
     var data = fs.readFileSync(req.file.path)
     const newDataJSON = data.toString()
     const newData = JSON.parse(newDataJSON)
@@ -117,6 +117,8 @@ async function uploadFiles(req, res) {
         const user = await User.findOne({ _id: req.params.id })
         user.courses.push(course._id)
         await user.save()
+        course.user = user.name
+        await course.save()
     }
 
     try {
@@ -139,15 +141,21 @@ router.get('/course', auth, async (req, res) => {
 
         let courses;
 
+        var allCourses = []
+
         if (user.role === 'admin') {
             courses = await Course.find();
+
+
         } else if (user.role === 'user') {
             const courseIds = user.courses;
             courses = await Course.find({ _id: { $in: courseIds } });
         } else {
             throw new Error('Invalid user role');
         }
-        res.render('course', { courseList: courses, user: JSON.stringify(user.id), role: user.role });
+
+
+        res.render('course', { courseList: courses, user: JSON.stringify(user.id), role: user.role,loggedUser:user.name });
     } catch (e) {
         res.status(500).send();
     }
@@ -399,7 +407,6 @@ router.post('/course/teaching/:id', auth, async (req, res) => {
 //deleting teaching
 
 router.patch('/course/teaching/teaching/delete/:id', auth, async (req, res) => {
-    console.log('deleteee')
     try {
         const course = await Course.findById(req.params.id);
         const courseTeachings = course.teachings;
@@ -413,7 +420,7 @@ router.patch('/course/teaching/teaching/delete/:id', auth, async (req, res) => {
             { safe: true, upsert: true }
         );
         const deletedTeaching = await Teaching.findByIdAndDelete(teaching.id);
-       res.status(201).send({ result: 'redirect', url: '/course/teaching/' + req.params.id });
+        res.status(201).send({ result: 'redirect', url: '/course/teaching/' + req.params.id });
     } catch (e) {
         res.status(500).send();
     }
@@ -764,18 +771,25 @@ router.patch('/course/edit/deleteLab/:id', auth, async (req, res) => {
 router.post('/course/delete/:id', auth, async (req, res) => {
     try {
         const courseId = req.params.id;
-        const course = await Course.findByIdAndDelete(courseId);
-        const userId = req.user.id;
-        const user = await User.findByIdAndUpdate(userId, { $pull: { courses: courseId } });
+        let course = await Course.findById(courseId);
 
         if (!course) {
             return res.status(404).send();
         }
+
+        const userName = course.name;
+        const user = await User.findOneAndUpdate(
+            { 'courses': courseId },
+            { $pull: { courses: courseId } }
+        );
+        course = await Course.findByIdAndDelete(courseId);
+
         res.redirect('/course');
     } catch (e) {
         res.status(500).send();
     }
 });
+
 
 
 // functions to get grades  ids and names 
