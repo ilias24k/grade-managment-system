@@ -155,7 +155,7 @@ router.get('/course', auth, async (req, res) => {
         }
 
 
-        res.render('course', { courseList: courses, user: JSON.stringify(user.id), role: user.role,loggedUser:user.name });
+        res.render('course', { courseList: courses, user: JSON.stringify(user.id), role: user.role, loggedUser: user.name });
     } catch (e) {
         res.status(500).send();
     }
@@ -235,6 +235,41 @@ router.get('/course/edit/:id', auth, async (req, res) => {
     }
 })
 
+//upload teachings
+
+router.post('/teachings', upload.single("files"), uploadFiles);
+
+router.post('/upload_teaching', auth, upload.single("files"), uploadFiles);
+async function uploadFiles(req, res) {
+
+    var data = fs.readFileSync(req.file.path)
+    const newDataJSON = data.toString()
+    const newData = JSON.parse(newDataJSON)
+    var teaching
+    var count = 1
+
+    for (var i = 0; i < newData.length; i++) {
+        teaching = new Teaching(newData[i])
+        teaching.teacher.push(req.user.id)
+        count = 1;
+        await teaching.save()
+
+        const course = await Course.findOne({ _id: req.body.currentCourse })
+        course.teachings.push(teaching._id)
+        await course.save()
+
+    }
+    try {
+        // await course.save()
+        res.status(201)
+        res.redirect('/course/teaching/' + req.body.currentCourse)
+    } catch (e) {
+        res.status(400).send(e)
+    }
+    res.send()
+}
+
+
 router.get('/course/teaching/:id', auth, async (req, res) => {
 
     try {
@@ -242,23 +277,22 @@ router.get('/course/teaching/:id', auth, async (req, res) => {
         var course = await Course.findById(req.params.id)
         var teachingList = []
         var usersList = []
-        var user = await User.find({})
-        for (var i = 0; i < user.length; i++) {
+        var users = await User.find({})
+        for (var i = 0; i < users.length; i++) {
 
-            usersList.push(user[i])
+            usersList.push(users[i])
         }
         var teachings = course.teachings
         teachingList = await Teaching.find({ '_id': { $in: teachings } });
 
         for (var i = 0; i < teachingList.length; i++) {
             for (var j = 0; j < usersList.length; j++) {
-
                 if (teachingList[i].teacher.length > 0 && teachingList[i].teacher[0].toString() === usersList[j].id.toString()) {
                     teachingList[i].teacher[0] = usersList[j].name;
                 }
             }
         }
-        res.render('teaching', { teachingList: teachingList, usersList: usersList, user: JSON.stringify(user) })
+        res.render('teaching', { teachingList: teachingList, usersList: usersList, user: JSON.stringify(user.id), role: user.role })
         // res.send(students)
     } catch (e) {
         res.status(500).send()

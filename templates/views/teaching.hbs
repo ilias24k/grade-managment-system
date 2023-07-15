@@ -30,8 +30,17 @@
                         <br>
                     </div>
                     <div class="col-6 d-flex justify-content-end">
-                        <button id="s1" type="button" onclick='childrenRow();'
-                            class="btn btn-primary align-self-center"><i class="bi bi-plus"></i><i>Add Row</button>
+
+                        <form id="teaching_upload_form" action="/upload_teaching" method="POST"
+                            enctype="multipart/form-data">
+                            <input type="file" accept=".json" id="myTeaching"
+                                onChange="document.getElementById('teaching_upload_form').submit();" name="files"
+                                style="display:none;" />
+                            <input type="hidden" id="hidden" name="currentCourse" value=" ">
+                            <button type="button" onclick="document.getElementById('myTeaching').click();"
+                                class="btn btn-primary align-self-center">+Upload Teachings</button>
+                        </form>
+
                     </div>
                 </div>
 
@@ -85,7 +94,8 @@
                                         </form>
 
 
-                                        <button id="delete" class="btn btn-outline-danger" oncontextmenu="return false;"><i class="bi bi-x"></i>
+                                        <button id="delete" class="btn btn-outline-danger"
+                                            oncontextmenu="return false;"><i class="bi bi-x"></i>
                                             <i onClick="sent({{year}}, '{{semester}}')">Delete
                                         </button>
 
@@ -102,7 +112,9 @@
     </div>
 
     <script>
-
+        var currentCourse = window.location.pathname.split("/").pop();
+        const hiddenInput = document.getElementById('hidden');
+        hiddenInput.value = currentCourse;
         function getComboA(selectObject) {
             var value = selectObject.value;
             var currentCourse = window.location.pathname.split("/").pop()
@@ -120,20 +132,16 @@
 
             $("#childTable").on('change', 'tr select', function (e) {
                 selectedIndex = $(this).closest('td').parent()[0].sectionRowIndex
-
                 index.push({
                     index: $(this).closest('td').parent()[0].sectionRowIndex
                 });
-
                 $('#childTable tbody tr').each(function (row, tr) {
                     rows.push({
                         semester: $(tr).find('td:eq(0)').text(),
                         year: $(tr).find('td:eq(1)').text()
                     });
                 });
-
                 data = { index: index, rows, teacher: teacher, duration: duration }
-
                 $.ajax({
                     url: "/course/teaching/upd/" + currentCourse,
                     type: 'PATCH',
@@ -146,13 +154,6 @@
                     }
                 })
             });
-
-        }
-
-        function childrenRow() {
-
-            $('#childTable').find('tbody').append('<tr><th scope="semester"><input type="text" name="semester" required class="form-control1" />'
-                + '</th><td class="col-sm-4"><input type="text" name="year" required class="form-control1" /> </td><td></tr>');
         }
         function sent(year, semester) {
             var currentCourse = window.location.pathname.split("/").pop();
@@ -170,8 +171,6 @@
                 }
             });
         }
-
-      
     </script>
 </body>
 

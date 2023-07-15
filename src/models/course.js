@@ -8,6 +8,9 @@ const courseSchema = new mongoose.Schema({
         trim: true,
 
     },
+    description:{
+        type: String
+    },
     lowTheoryBound:{
         type: Number,
         default: 5
