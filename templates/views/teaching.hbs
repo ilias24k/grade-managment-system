@@ -67,6 +67,7 @@
                                 <td class="text-end">
 
                                     <div class="text-end" id="myForm">
+                                        {{#checkFlag ../role 'admin'}}
 
                                         <span>Select a Teacher: </span>
                                         <select name="teacher_name" id="teacher_name" onchange="getComboA(this)">
@@ -76,6 +77,7 @@
                                             <option>{{name}} </option>
                                             {{/each}}
                                         </select>
+                                          {{/checkFlag}}
 
                                         <span>Select Duration of Grade: </span>
                                         <select name="duration" id="duration" onchange="getComboA(this)">
