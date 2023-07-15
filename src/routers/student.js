@@ -583,8 +583,7 @@ router.get('/student/:id', auth, async (req, res) => {
 })
 
 router.get('/student/edit/:id', auth, async (req, res) => {
-    console.log('edw 2')
-    console.log(req.params)
+
     try {
         var user = req.user
 

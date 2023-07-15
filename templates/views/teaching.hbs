@@ -30,7 +30,6 @@
                         <br>
                     </div>
                     <div class="col-6 d-flex justify-content-end">
-
                         <form id="teaching_upload_form" action="/upload_teaching" method="POST"
                             enctype="multipart/form-data">
                             <input type="file" accept=".json" id="myTeaching"
@@ -40,10 +39,8 @@
                             <button type="button" onclick="document.getElementById('myTeaching').click();"
                                 class="btn btn-primary align-self-center">+Upload Teachings</button>
                         </form>
-
                     </div>
                 </div>
-
                 <form id="update-form" name='update-form' method="post">
                     <table class="table table-bordered" id="childTable">
                         <thead class="thead-dark">
@@ -61,14 +58,10 @@
                                 <td>{{semester}}</td>
                                 <td>{{year}}</td>
                                 <td>{{duration}}</td>
-
                                 <td>{{teacher}}</td>
-
                                 <td class="text-end">
-
                                     <div class="text-end" id="myForm">
                                         {{#checkFlag ../role 'admin'}}
-
                                         <span>Select a Teacher: </span>
                                         <select name="teacher_name" id="teacher_name" onchange="getComboA(this)">
                                             <option disabled selected value> -- select an option -- </option>
@@ -78,7 +71,6 @@
                                             {{/each}}
                                         </select>
                                           {{/checkFlag}}
-
                                         <span>Select Duration of Grade: </span>
                                         <select name="duration" id="duration" onchange="getComboA(this)">
                                             <option disabled selected value> -- select an option -- </option>
@@ -87,15 +79,11 @@
                                             <option>2 years</option>
                                             <option>3 years</option>
                                             <option></option>
-
                                         </select>
-
                                         <form></form>
                                         <form method="GET" action="/course/view/teaching/{{_id}}">
                                             <input type="submit" class="btn btn-outline-info" value="View Students" />
                                         </form>
-
-
                                         <button id="delete" class="btn btn-outline-danger"
                                             oncontextmenu="return false;"><i class="bi bi-x"></i>
                                             <i onClick="sent({{year}}, '{{semester}}')">Delete

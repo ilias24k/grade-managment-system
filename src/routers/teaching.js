@@ -14,7 +14,47 @@ const User = require('../models/user')
 
 //upload teaching
 
+
+
+
+const upload = multer({
+    storage: multer.diskStorage({}),
+    fileFilter: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        if (ext !== '.json') {
+            return cb(new Error('Only JSON files are allowed'))
+        }
+        cb(null, true)
+    }
+});
+
 router.post('/teachings', upload.single("files"), uploadFiles);
+
+// error handling middleware for file upload 
+router.use(function (err, req, res, next) {
+    if (err instanceof multer.MulterError) {
+        // A Multer error occurred when uploading.
+        res.status(400).send('Error uploading file: ' + err.message);
+    } else {
+        res.status(500).send(err.message);
+
+    }
+});
+
+function uploadFiles(req, res) {
+    // read the uploaded file
+    const file = req.file;
+    if (!file) return res.status(400).send('No file uploaded.');
+
+    // parse the JSON data and save to database
+    const courseData = JSON.parse(file.buffer);
+    // save course to database...
+
+    // redirect to course page
+    res.redirect('/course');
+}
+
+
 
 router.post('/upload_teaching', auth, upload.single("files"), uploadFiles);
 async function uploadFiles(req, res) {
@@ -27,7 +67,14 @@ async function uploadFiles(req, res) {
 
     for (var i = 0; i < newData.length; i++) {
         teaching = new Teaching(newData[i])
-        teaching.teacher.push(req.user.id)
+
+        if (req.user.role !== "admin") {
+            teaching.teacher.push(req.user.id)
+        } else if (req.user.role == "admin") {
+
+            teaching.teacher.splice(1, 0, req.user.id);
+        }
+
         count = 1;
         await teaching.save()
 
@@ -221,21 +268,29 @@ router.patch('/course/teaching/teaching/delete/:id', auth, async (req, res) => {
     try {
         const course = await Course.findById(req.params.id);
         const courseTeachings = course.teachings;
-        const teaching = await Teaching.findOne({
-            year: req.body.year,
-            semester: req.body.semester
-        });
-        await Course.findByIdAndUpdate(
-            req.params.id,
-            { $pull: { teachings: teaching.id } },
-            { safe: true, upsert: true }
-        );
-        const deletedTeaching = await Teaching.findByIdAndDelete(teaching.id);
+        const user = req.user;
+
+        for (let i = 0; i < courseTeachings.length; i++) {
+            const teaching = await Teaching.findById(courseTeachings[i]);
+
+            if (teaching) {
+                if (teaching.year.toString() === req.body.year.toString() && teaching.semester.toString() === req.body.semester.toString()) {
+                    await Course.findByIdAndUpdate(
+                        req.params.id,
+                        { $pull: { teachings: teaching.id } },
+                        { safe: true, upsert: true }
+                    );
+                    await Teaching.findByIdAndDelete(teaching.id);
+                }
+            }
+        }
+
         res.status(201).send({ result: 'redirect', url: '/course/teaching/' + req.params.id });
     } catch (e) {
-        res.status(500).send();
+        res.status(500).send(e.message);
     }
 });
+
 
 router.patch('/course/teaching/lock/:id', auth, async (req, res) => {
 

@@ -3,6 +3,7 @@ require('./db/mongoose')
 const userRouter = require('./routers/user')
 const courseRouter = require('./routers/course')
 const studentRouter = require('./routers/student')
+const teachingRouter = require('./routers/teaching')
 const homeRouter = require('./routers/home')
 
 const hbs = require('hbs')
@@ -29,6 +30,7 @@ app.use(homeRouter)
 app.use(userRouter)
 app.use(courseRouter)
 app.use(studentRouter)
+app.use(teachingRouter)
 
 
 
