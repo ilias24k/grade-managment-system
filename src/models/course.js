@@ -57,6 +57,9 @@ const courseSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: false
     }],
+    semester:{
+        type: String
+    },
 
     students: [{
         type: mongoose.Schema.Types.ObjectId,

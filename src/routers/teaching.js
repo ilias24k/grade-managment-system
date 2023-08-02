@@ -69,7 +69,7 @@ async function uploadFiles(req, res) {
     var count = 1
 
     for (var i = 0; i < newData.length; i++) {
-        var course = await Course.findById(req.body.currentCourse) 
+        var course = await Course.findById(req.body.currentCourse)
 
         teaching = new Teaching(newData[i])
         teaching.courseName = course.name;
@@ -113,7 +113,18 @@ router.get('/course/teaching/:id', auth, async (req, res) => {
             usersList.push(users[i])
         }
         var teachings = course.teachings
-        teachingList = await Teaching.find({ '_id': { $in: teachings } });
+
+        //check if user role is admin so that he can see all the teachings
+        // if the role is user then  he can only see his own teachings
+        
+        if (user.role == 'admin') {
+            teachingList = await Teaching.find({ '_id': { $in: teachings } });
+        } else if (user.role == 'user') {
+            teachingList = await Teaching.find({
+                '_id': { $in: teachings },
+                'teacher': { $elemMatch: { $exists: true } }
+            });
+        }
 
         for (var i = 0; i < teachingList.length; i++) {
             for (var j = 0; j < usersList.length; j++) {
@@ -121,7 +132,11 @@ router.get('/course/teaching/:id', auth, async (req, res) => {
                     teachingList[i].teacher[0] = usersList[j].name;
                 }
             }
+            // console.log(teachingList[i])
+            teachingList[i].semester = course.semester;
+
         }
+        // console.log(teachingList)
         res.render('teaching', { teachingList: teachingList, usersList: usersList, user: JSON.stringify(user.id), role: user.role })
         // res.send(students)
     } catch (e) {
@@ -142,12 +157,12 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
         courseTeachings = course.teachings
 
         var teaching = await Teaching.findOne({
-            $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
+            $and: [{ year: { $eq: year } }]
         })
         if (duration == '1 year') {
             duration = 1
             teaching = await Teaching.findOneAndUpdate({
-                $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
+                $and: [{ year: { $eq: year } }]
             }, { $set: { "duration": duration } },
                 { safe: true, upsert: true },
                 function (err, model) {
@@ -156,7 +171,7 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
         } else if (duration == '2 years') {
             duration = 2
             teaching = await Teaching.findOneAndUpdate({
-                $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
+                $and: [{ year: { $eq: year } }]
             }, { $set: { "duration": duration } },
                 { safe: true, upsert: true },
                 function (err, model) {
@@ -165,17 +180,17 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
         } else if (duration == '3 years') {
             duration = 3
             teaching = await Teaching.findOneAndUpdate({
-                $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
+                $and: [{ year: { $eq: year } }]
             }, { $set: { "duration": duration } },
                 { safe: true, upsert: true },
                 function (err, model) {
-                    console.log(model);
+                    // console.log(model);
                 })
 
         } else if (duration == 'no time limit') {
             duration = 100
             teaching = await Teaching.findOneAndUpdate({
-                $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
+                $and: [{ year: { $eq: year } }]
             }, { $set: { "duration": duration } },
                 { safe: true, upsert: true },
                 function (err, model) {
@@ -185,7 +200,7 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
         }
         if (teacher == 'remove current teacher') {
             teaching = await Teaching.findOneAndUpdate({
-                $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
+                $and: [{ year: { $eq: year } }]
             }, { $pull: { "teacher": teaching.teacher[0] } },
                 { safe: true, upsert: true },
                 function (err, model) {
@@ -195,11 +210,11 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
             // return
         } else {
             teaching = await Teaching.findOneAndUpdate({
-                $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
+                $and: [{ year: { $eq: year } }]
             }, { $push: { teacher: user._id } })
 
             teaching = await Teaching.findOneAndUpdate({
-                $and: [{ year: { $eq: year } }, { semester: { $eq: semester } }]
+                $and: [{ year: { $eq: year } }]
             }, { $pull: { "teacher": teaching.teacher[0] } },
                 { safe: true, upsert: true },
                 function (err, model) {
@@ -280,7 +295,7 @@ router.patch('/course/teaching/teaching/delete/:id', auth, async (req, res) => {
             const teaching = await Teaching.findById(courseTeachings[i]);
 
             if (teaching) {
-                if (teaching.year.toString() === req.body.year.toString() && teaching.semester.toString() === req.body.semester.toString()) {
+                if (teaching.year.toString() === req.body.year.toString() && course.semester.toString() === req.body.semester.toString()) {
                     await Course.findByIdAndUpdate(
                         req.params.id,
                         { $pull: { teachings: teaching.id } },
@@ -337,7 +352,7 @@ router.get('/course/view/teaching/:id', auth, async (req, res) => {
         if (!teaching) {
             return res.status(404).send()
         }
-        res.render('courseStudents', { records: records, flag: flag, user: JSON.stringify(user) })
+        res.render('courseStudents', { records: records, flag: flag, user: JSON.stringify(user), role: user.role })
 
     } catch (e) {
         res.status(500).send()

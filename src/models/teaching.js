@@ -1,24 +1,21 @@
 const mongoose = require('mongoose')
 
 const teachingSchema = new mongoose.Schema({
-    
-    semester: {
-        type: String       
-    },
-    year:{
-        type: Number        
-    },
-    duration:{
+
+    year: {
         type: Number
     },
-    flag:{
-        type:Boolean,
+    duration: {
+        type: Number
+    },
+    flag: {
+        type: Boolean,
         default: false
-    },   
-    courseName:{
+    },
+    courseName: {
         type: String
     },
-    
+
     teacher: [{
         type: mongoose.Schema.Types.ObjectId,
         required: false
