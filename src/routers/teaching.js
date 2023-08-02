@@ -57,7 +57,10 @@ function uploadFiles(req, res) {
 
 
 router.post('/upload_teaching', auth, upload.single("files"), uploadFiles);
+
 async function uploadFiles(req, res) {
+    // console.log(req.params)
+    // console.log(req.body)
 
     var data = fs.readFileSync(req.file.path)
     const newDataJSON = data.toString()
@@ -66,21 +69,23 @@ async function uploadFiles(req, res) {
     var count = 1
 
     for (var i = 0; i < newData.length; i++) {
+        var course = await Course.findById(req.body.currentCourse) 
+
         teaching = new Teaching(newData[i])
+        teaching.courseName = course.name;
 
         if (req.user.role !== "admin") {
             teaching.teacher.push(req.user.id)
         } else if (req.user.role == "admin") {
-
             teaching.teacher.splice(1, 0, req.user.id);
         }
 
         count = 1;
         await teaching.save()
 
-        const course = await Course.findOne({ _id: req.body.currentCourse })
-        course.teachings.push(teaching._id)
-        await course.save()
+        const updatedCourse = await Course.findOne({ _id: req.body.currentCourse })
+        updatedCourse.teachings.push(teaching._id)
+        await updatedCourse.save()
 
     }
     try {
@@ -92,6 +97,7 @@ async function uploadFiles(req, res) {
     }
     res.send()
 }
+
 
 
 router.get('/course/teaching/:id', auth, async (req, res) => {

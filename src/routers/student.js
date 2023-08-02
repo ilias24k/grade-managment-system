@@ -394,6 +394,7 @@ router.get('/student', auth, async (req, res) => {
         teachingYears,
         studId,
       };
+    //   console.log(object)
       data.push(object);
     }
 
