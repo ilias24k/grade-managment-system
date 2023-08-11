@@ -31,32 +31,36 @@
                     <table class="table table-bordered" id="childTable3">
                         <thead class="thead-dark">
                             <tr>
-                                <th scope="col">Name </th>
-                                <th scope="col">Weight </th>
-                                <th scope="col">Edit Weight</th>
-                                <th scope="col">Low Bound</th>
-                                <th scope="col">Edit Bound</th>
-
-                            </tr>
-                            <tr>
-
-                                <th scope="row">Theory</th>
-                                <td>{{generalTheoryWeight}} </td>
-                                <td> <input type="text" id="generalTheoryWeightInput" class="form-control3"> </td>
-                                <td> {{lowTheoryBound}}</td>
-                                <td> <input type="text" id="lowTheoryBoundInput" class="form-control4"> </td>
-
-                            </tr>
-                            <tr>
-                                <th scope="row">Lab</th>
-                                <td>{{generalLabWeight}} </td>
-                                <td> <input type="text" id="generalLabWeightInput" class="form-control5"> </td>
-                                <td> {{lowLabBound}}</td>
-                                <td> <input type="text" id="lowLabBoundInput" class="form-control6"> </td>
+                                <th scope="col">Name</th>
+                                <th scope="col">Weight</th>
+                                <th scope="col">Bound</th>
+                                <th scope="col">Edit</th>
                             </tr>
                         </thead>
                         <tbody>
-
+                            <tr>
+                                <th scope="row">Theory</th>
+                                <td id="theoryWeight">{{generalTheoryWeight}}</td>
+                                <td id="theoryBound">{{lowTheoryBound}}</td>
+                                <td>
+                                    <button type="button" class="btn btn-primary edit-button" data-toggle="modal"
+                                        data-target="#editModal1" onclick="openEditModal('theory')">
+                                        Edit
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Lab</th>
+                                <td id="labWeight">{{generalLabWeight}}</td>
+                                <td id="labBound">{{lowLabBound}}</td>
+                                <td>
+                                    <button type="button" class="btn btn-primary edit-button" data-toggle="modal"
+                                        data-target="#editModal2" onclick="openEditModal('lab')">
+                                        Edit
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
 
                     <body>
@@ -68,36 +72,36 @@
                         <table class="table table-bordered" id="childTable">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th scope="col">Id </th>
-                                    <th scope="col">name </th>
+                                    <th scope="col">Id</th>
+                                    <th scope="col">name</th>
                                     <th scope="col">weight</th>
                                     <th scope="col">bound</th>
-                                    <th scope="col">edit bound</th>
+
                                     <th scope="col" class="text-end">action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {{#each arr}}
-
                                 <tr>
-                                    <td>{{id}} <class="form-control1">
-                                            </class>
-                                    </td>
+                                    <td>{{id}} <class="form-control1"></td>
                                     <td>{{name}} <id="theoryName" class="form-control1">
                                     </td>
                                     <td>{{weight}} <id="theoryWeight" class="form-control1">
                                     </td>
-                                    <td>{{bound}} <id="theoryBound" class="form-control1">
-                                    </td>
-                                    <td> <input type="text" id="boundTh" class="form-control7"> </td>
-                                    <td class="text-end">
-                                        <button <button class="btn btn-outline-danger"><i class="bi bi-x"></i>
-                                            <i onclick="sent('{{name}}', {{id}}, {{weight}})">Delete</button>
+                                    <td>
+                                        <span>{{bound}}</span>
                                     </td>
 
+                                    <td class="text-end">
+                                        <button class="btn btn-primary edit-bound" data-id="{{id}}">Edit Bound</button>
+                                        <button class="btn btn-outline-danger"
+                                            onclick="sent('{{name}}', {{id}}, {{weight}})">Delete</button>
+                                    </td>
                                 </tr>
                                 {{/each}}
+                            </tbody>
                         </table>
+
                         <button id="s1" type="button" onclick='childrenRow();' class="btn btn-outline-primary"><i
                                 class="bi bi-plus"></i><i>Add Row</button>
                         <div class="col-6">
@@ -111,7 +115,6 @@
                                     <th scope="col">name </th>
                                     <th scope="col">weight</th>
                                     <th scope="col">bound</th>
-                                    <th scope="col">edit bound</th>
                                     <th scope="col" class="text-end">action</th>
                                 </tr>
                             </thead>
@@ -127,11 +130,11 @@
                                     </td>
                                     <td>{{bound}} <id="labBound" class="form-control1">
                                     </td>
-                                    <td> <input type="text" id="boundLab" class="form-control8">
+
                                     <td class="text-end">
-                                        <button class="btn btn-outline-danger"><i class="bi bi-x"></i>
-                                            <i onclick="sent2('{{name}}', {{id}}, {{weight}})">Delete
-                                        </button>
+                                        <button class="btn btn-primary edit-bound" data-id="{{id}}">Edit Bound</button>
+                                        <button class="btn btn-outline-danger"
+                                            onclick="sent2('{{name}}', {{id}}, {{weight}})">Delete</button>
                                     </td>
                                 </tr>
                                 {{/each}}
@@ -144,6 +147,36 @@
             </form>
 
             <script>
+                const editBoundButtons = document.getElementsByClassName("edit-bound");
+
+                Array.from(editBoundButtons).forEach(button => {
+                    button.addEventListener("click", event => {
+                        event.preventDefault();
+                        const row = button.parentNode.parentNode;
+                        const boundCell = row.querySelector("td:nth-child(4)");
+                        boundCell.innerHTML = `<input type="text" value="${boundCell.innerText}" class="form-control">`;
+                    });
+                });
+            </script>
+
+
+            <script>
+
+                var sumTh = 0;
+                var sumLab = 0;
+
+
+                function openEditModal(type) {
+                    const weightElement = document.getElementById(`${type}Weight`);
+                    const boundElement = document.getElementById(`${type}Bound`);
+
+                    const weightValue = prompt("Enter the new weight:");
+                    const boundValue = prompt("Enter the new bound:");
+
+                    weightElement.textContent = weightValue;
+                    boundElement.textContent = boundValue;
+                }
+
                 const theoryName = document.getElementsByClassName('.theory-name')
                 const theoryWeight = document.querySelector('#theoryWeight')
                 const labName = document.querySelector('#labName')
@@ -154,21 +187,30 @@
 
                 function childrenRow() {
 
-                    var rowCount = $('#childTable tr').length;
-                    ids.push(rowCount);
+                    if (sumTh >= 100) {
+                        alert('The sum of weights cannot exceed 100')
+                    } else {
+                        var rowCount = $('#childTable tr').length;
+                        ids.push(rowCount);
+                        $('#childTable').find('tbody').append('<tr><th scope="row">' + rowCount
+                            + '</th><td class="col-sm-4"><input type="text" name="name" class="form-control1" /></td><td><input type="text" name="weight" class="form-control1" /></tr>');
+                    }
 
-                    $('#childTable').find('tbody').append('<tr><th scope="row">' + rowCount
-                        + '</th><td class="col-sm-4"><input type="text" name="name" class="form-control1" /></td><td><input type="text" name="weight" class="form-control1" /></tr>');
                 }
                 function childrenRow2() {
-                    var rowCount = $('#childTable2 tr').length;
-                    idsLab.push(rowCount);
-                    $('#childTable2').find('tbody').append('<tr><th scope="row">' + rowCount
-                        + '</th><td class="col-sm-4"><input type="text" name="name" class="form-control2" /></td><td><input type="text" name="weight" class="form-control2" /></tr>');
+                    if (sumLab >= 100) {
+                        alert('The sum of weights cannot exceed 100')
+                    } else {
+                        var rowCount = $('#childTable2 tr').length;
+                        idsLab.push(rowCount);
+                        $('#childTable2').find('tbody').append('<tr><th scope="row">' + rowCount
+                            + '</th><td class="col-sm-4"><input type="text" name="name" class="form-control2" /></td><td><input type="text" name="weight" class="form-control2" /></tr>');
+                    }
                 }
 
                 $("#update-form").submit(function (e) {
                     e.preventDefault();
+
                     var data = {}
                     var theory = []
                     var lab = []
@@ -180,7 +222,7 @@
                     var boundLab = []
                     var boundIds
                     var boundIdsLab
-                  
+
                     $('#childTable tbody tr').each(function (row, tr) {
 
                         boundTh.push({
@@ -199,7 +241,6 @@
                     });
 
                     $('.form-control1').each(function () {
-
                         var textVal = $(this).val();
                         if (textVal != 0) {
                             theory.push(textVal)
@@ -208,7 +249,6 @@
                     });
 
                     var counter = 0;
-
                     for (var x = 0; x < ids.length; x++) {
                         theory.splice(counter, 0, ids[x])
                         counter = counter + 3
@@ -223,13 +263,12 @@
 
                     $('.form-control3').each(function () {
                         var textVal3 = $(this).val();
-                        
+
                         if (textVal3 !== undefined && textVal3 !== '') {
                             editGeneralTheoryWeight = textVal3
 
                         } else if (textVal3 === null) {
                             editGeneralTheoryWeight = 0
-
                         }
                     });
 
@@ -261,6 +300,7 @@
                             boundTh.push(0)
                         }
                     });
+
                     $('.form-control8').each(function () {
                         var textVal8 = $(this).val();
                         if (textVal8 !== undefined && textVal8 !== '') {
@@ -282,7 +322,44 @@
                     } else {
                         data = { theory, lab, editGeneralTheoryWeight, editGeneralLabWeight, editGeneralTheoryBound, editGeneralLabBound, boundTh, boundLab } //all
                     }
+
+                    var sumColumnValues = 0;
+
+                    $(document).ready(function () {
+                        $('#childTable tbody').find('tr').each(function (row, tr) {
+                            var columnValue = parseInt($(tr).find('td:eq(2)').text(), 10);
+                            if (!isNaN(columnValue)) {
+                                sumColumnValues += columnValue;
+                            }
+                        });
+
+                    });
+
+                    // checking the sum of weights
                     
+                    var theoryTable = $('#childTable').find('tbody tr');
+                    var labTable = $('#childTable2').find('tbody tr');
+
+                    theoryTable.each(function (i, row) {
+                        var weightCell = $(row).find('input[name="weight"]');
+                        if (weightCell.length > 0 && !isNaN(parseFloat(weightCell.val()))) {
+                            sumTh += parseFloat(weightCell.val());
+                        }
+                    });
+
+                    labTable.each(function (i, row) {
+                        var weightCell = $(row).find('input[name="weight"]');
+                        if (weightCell.length > 0 && !isNaN(parseFloat(weightCell.val()))) {
+                            sumLab += parseFloat(weightCell.val());
+                        }
+                    });
+
+                    if (sumTh > 100 || sumLab > 100) {
+                        alert("The sum of weights in tables cannot exceed 100");
+                        return false;
+                    }
+
+               
                     $.ajax({
                         url: window.location.pathname,
                         type: "PATCH",

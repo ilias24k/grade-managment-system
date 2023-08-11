@@ -148,18 +148,23 @@ router.get('/users', auth, async (req, res) => {
             return res.status(403).send('Unauthorized');
         }
         const users = await User.find({ role: 'user' });
-        for(let i = 0; i<users.length; i++){
-            for (let y = 0; y< users[i].courses.length; y++){
-                var course = await Course.findById(users[i].courses[y])
-                users[i].courses[y] = course.name
+
+        for (let i = 0; i < users.length; i++) {
+            const userCourses = [];
+            for (let y = 0; y < users[i].courses.length; y++) {
+                var course = await Course.findById(users[i].courses[y]);
+                if (course.user === user.name) {
+                    userCourses.push(course);
+                }
+                users[i].courses[y] = course.name;
             }
         }
-
-        res.render('users',{users: users,user: JSON.stringify(user), role: user.role});
+        res.render('users', { users: users, user: JSON.stringify(user), role: user.role });
     } catch (e) {
         res.status(500).send();
     }
 });
+
 
 
 

@@ -40,95 +40,77 @@ router.get('/upload_course', async (req, res) => {
 })
 
 const upload = multer({
-    storage: multer.diskStorage({}),
-    fileFilter: function (req, file, cb) {
-        const ext = path.extname(file.originalname);
-        if (ext !== '.json') {
-            return cb(new Error('Only JSON files are allowed'))
-        }
-        cb(null, true)
+  storage: multer.diskStorage({}),
+  fileFilter: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    if (ext !== '.json') {
+      return cb(new Error('Only JSON files are allowed'))
     }
+    cb(null, true)
+  }
 });
 
 router.post('/course', upload.single("files"), uploadFiles);
 
 // error handling middleware for file upload 
 router.use(function (err, req, res, next) {
-    if (err instanceof multer.MulterError) {
-        // A Multer error occurred when uploading.
-        res.status(400).send('Error uploading file: ' + err.message);
-    } else {
-        res.status(500).send(err.message);
-
-    }
+  if (err instanceof multer.MulterError) {
+    // A Multer error occurred when uploading.
+    res.status(400).send('Error uploading file: ' + err.message);
+  } else {
+    res.status(500).send(err.message);
+  }
 });
 
-function uploadFiles(req, res) {
-    // read the uploaded file
-    const file = req.file;
-    if (!file) return res.status(400).send('No file uploaded.');
 
-    // parse the JSON data and save to database
-    const courseData = JSON.parse(file.buffer);
-    // save course to database...
-
-    // redirect to course page
-    res.redirect('/course');
-}
-
-
-// uploading courses 
 
 router.post('/upload_course/:id', auth, upload.single("files"), uploadFiles);
 async function uploadFiles(req, res) {
-
+  try {
     var data = fs.readFileSync(req.file.path)
     const newDataJSON = data.toString()
     const newData = JSON.parse(newDataJSON)
     var course
     var count = 1
     for (var i = 0; i < newData.length; i++) {
-        course = new Course(newData[i])
-        Object.keys(newData[i].theory)
-            .forEach(function eachKey(key) {
-                course.theory.id.push(count)
-                course.theory.names.push(key)
-                course.theory.weight.push(newData[i].theory[key])
-                course.theoryBounds.bound.push(5)
-                course.theoryBounds.id.push(count)
-                count += 1
-            });
-        // console.log(course.theory.bound)
+      course = new Course(newData[i])
+      Object.keys(newData[i].theory)
+        .forEach(function eachKey(key) {
+          course.theory.id.push(count)
+          course.theory.names.push(key)
+          course.theory.weight.push(newData[i].theory[key])
+          course.theoryBounds.bound.push(5)
+          course.theoryBounds.id.push(count)
+          count += 1
+        });
+      // console.log(course.theory.bound)
+      count = 1;
+      if (newData[i].lab) {
+        Object.keys(newData[i].lab)
+          .forEach(function eachKey(key) {
+            course.lab.id.push(count)
+            course.lab.names.push(key)
+            course.lab.weight.push(newData[i].lab[key])
+            course.labBounds.bound.push(5)
+            course.labBounds.id.push(count)
+            count += 1
+          });
         count = 1;
-        if (newData[i].lab) {
-            Object.keys(newData[i].lab)
-                .forEach(function eachKey(key) {
-                    course.lab.id.push(count)
-                    course.lab.names.push(key)
-                    course.lab.weight.push(newData[i].lab[key])
-                    course.labBounds.bound.push(5)
-                    course.labBounds.id.push(count)
-                    count += 1
-                });
-            count = 1;
-        }
-        await course.save()
-        // Store the uploaded course ID to the user's array of course IDs
-        const user = await User.findOne({ _id: req.params.id })
-        user.courses.push(course._id)
-        await user.save()
-        course.user = user.name
-        await course.save()
+      }
+      await course.save()
+      // Store the uploaded course ID to the user's array of course IDs
+      const user = await User.findOne({ _id: req.params.id })
+      user.courses.push(course._id)
+      await user.save()
+      course.user = user.name
+      await course.save()
     }
 
-    try {
-        // await course.save()
-        res.status(201)
-        res.redirect('/course')
-    } catch (e) {
-        res.status(400).send(e)
-    }
-    res.send()
+    res.status(201);
+    res.redirect('/course');
+  } catch (error) {
+    res.status(400).send("Not correct file");
+  }
 }
 
 
@@ -228,7 +210,7 @@ router.get('/course/edit/:id', auth, async (req, res) => {
         }
         res.render('editCourse', {
             arr: arr, arr2: arr2, generalTheoryWeight: generalTheoryWeight, generalLabWeight: generalLabWeight,
-            lowTheoryBound: lowTheoryBound, lowLabBound: lowLabBound, user: JSON.stringify(user)
+            lowTheoryBound: lowTheoryBound, lowLabBound: lowLabBound, user: JSON.stringify(user),role :user.role
         })
     } catch (e) {
         res.status(500).send()

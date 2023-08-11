@@ -25,7 +25,11 @@
                     {{#each users}}
                     <tr>
                         <td>{{name}}</td>
-                        <td>{{courses}}</td>
+                        <td>
+                            {{#each courses}}
+                                <p>{{this}}</p>
+                            {{/each}}
+                        </td>
                         <td class="text-end">
                             <form id="course_upload_form_{{_id}}" action="/upload_course/{{_id}}" method="POST"
                                 enctype="multipart/form-data">
@@ -38,7 +42,7 @@
                             </form>
                             <button type="button" class="btn btn-outline-info" data-bs-toggle="modal"
                                 data-bs-target="#userInfoModal_{{_id}}">View</button>
-                            
+
                             <form action="/users/delete/{{_id}}" method="POST">
                                 <input type="hidden" name="id" value="{{_id}}">
                                 <button class="btn btn-outline-danger"><i class="bi bi-person-x"></i><i

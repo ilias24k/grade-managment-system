@@ -196,7 +196,7 @@ router.patch('/course/teaching/upd/:id', auth, async (req, res) => {
                 function (err, model) {
                     // console.log();
                 })
-            return
+            
         }
         if (teacher == 'remove current teacher') {
             teaching = await Teaching.findOneAndUpdate({
