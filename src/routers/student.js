@@ -270,7 +270,7 @@ async function uploadFiles(req, res) {
         const workbook = xlsx.readFile(req.file.path);
         var sheet_name_list = workbook.SheetNames;
         var students = [];
-        var course = await Course.findOneAndUpdate({ "teachings": req.body.teaching_id })
+        var course = await Course.findOne({ "teachings": req.body.teaching_id })
 
         sheet_name_list.forEach(function (y) {
             var worksheet = workbook.Sheets[y];
@@ -300,28 +300,27 @@ async function uploadFiles(req, res) {
             }
             //adding students to teaching and course 
 
-            docs.forEach(function (doc) {
-                Teaching.findByIdAndUpdate(
-                    req.body.teaching_id,
-                    { $push: { "students": doc } },
-                    { safe: true, upsert: true },
-                    function (err, model) {
-                        if (err) {
-                            console.log(err);
-                        }
-                    }
-                );
-                Course.findByIdAndUpdate(
-                    course.id,
-                    { $push: { "students": doc } },
-                    { safe: true, upsert: true },
-                    function (err, model) {
-                        if (err) {
-                            console.log(err);
-                        }
-                    }
-                );
-            });
+            Teaching.findByIdAndUpdate(
+                req.body.teaching_id,
+                { $push: { "students": { $each: docs } } },
+                { safe: true, upsert: true },
+                function (err, model) {
+                  if (err) {
+                    console.log(err);
+                  }
+                }
+              );
+        
+              Course.findByIdAndUpdate(
+                course.id,
+                { $push: { "students": { $each: docs } } },
+                { safe: true, upsert: true },
+                function (err, model) {
+                  if (err) {
+                    console.log(err);
+                  }
+                }
+              );
         });
         res.redirect('/course/view/teaching/' + req.body.teaching_id);
     } catch (e) {
