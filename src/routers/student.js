@@ -329,81 +329,128 @@ async function uploadFiles(req, res) {
 }
 
 router.get('/student', auth, async (req, res) => {
-    try {
-        var user = req.user;
-        var role = user.role;
+  try {
+    var user = req.user;
+    var role = user.role;
 
-        var userCoursesIds = user.courses;
-        var courses = [];
-        for (let i = 0; i < userCoursesIds.length; i++) {
-            let course = await Course.findById(userCoursesIds[i]);
-            if (course && course.students) {
-                courses.push(course);
-            }
-        }
-
-        var teachingStudents = [];
-        var data = [];
+    if (role === 'admin') {
+      var students = await Student.find();
+      var data = [];
+      for (var i = 0; i < students.length; i++) {
+        var student = students[i];
+        var curStud = student.name;
+        var curEmail = student.email;
+        var curAM = student.AM;
+        var curCourse = null;
         var teachingYears = [];
-        var curStud;
-        var curCourse;
-        var curAM;
-        var curEmail;
+        var studId = student.id;
 
-        var students = [];
-        for (let i = 0; i < courses.length; i++) {
-            if (courses[i].students) {
-                students = students.concat(courses[i].students);
+        if (student.teachings) {
+          for (var y = 0; y < student.teachings.length; y++) {
+            var teaching = student.teachings[y];
+            var year = teaching.year;
+
+            if (teachingYears.indexOf(year) === -1) {
+              teachingYears.push(year);
             }
+
+            var course = await Course.findById(teaching.course);
+            if (course) {
+              curCourse = course.name;
+            }
+          }
         }
 
-        for (var i = 0; i < students.length; i++) {
-            var teaching = await Teaching.find({ students: students[i] });
-            let student = await Student.findById(students[i]);
+        var object = {
+          curAM,
+          curStud,
+          curEmail,
+          curCourse,
+          teachingYears,
+          studId,
+        };
 
-            // Add a null check for the student object
-            if (student !== null) {
-                curStud = student.name;
-                curEmail = student.email;
-                curAM = student.AM;
-            } else {
-                continue;
-            }
-            let studId = student.id;
-            for (var y = 0; y < teaching.length; y++) {
-                teachingYears = [];
-                let year = teaching[y].year;
+        data.push(object);
+      }
 
-                if (teaching.some((obj) => obj.year === year)) {
-                    teachingYears.push(year);
-                    curCourse = teaching[y].courseName;
-                } else {
-                    teachingYears = [year];
-                    curCourse = teaching[y].courseName;
-                }
-            }
-            var object = {
-                curAM,
-                curStud,
-                curEmail,
-                curCourse,
-                teachingYears,
-                studId,
-            };
-            //   console.log(object)
-            data.push(object);
+      res.render('allCourseStudents', {
+        data: data,
+        user: { user: JSON.stringify(user) },
+        role: role,
+      });
+    } else {
+      var userCoursesIds = user.courses;
+      var courses = [];
+      for (let i = 0; i < userCoursesIds.length; i++) {
+        let course = await Course.findById(userCoursesIds[i]);
+        if (course && course.students) {
+          courses.push(course);
         }
+      }
 
-        res.render('allCourseStudents', {
-            data: data,
-            user: { user: JSON.stringify(user) },
-            role: role,
-        });
-    } catch (e) {
-        console.log(e);
-        res.status(500).send();
+      var teachingStudents = [];
+      var data = [];
+      var teachingYears = [];
+      var curStud;
+      var curCourse;
+      var curAM;
+      var curEmail;
+
+      var students = [];
+      for (let i = 0; i < courses.length; i++) {
+        if (courses[i].students) {
+          students = students.concat(courses[i].students);
+        }
+      }
+
+      for (var i = 0; i < students.length; i++) {
+        var teaching = await Teaching.find({ students: students[i] });
+        let student = await Student.findById(students[i]);
+
+        if (student !== null) {
+          curStud = student.name;
+          curEmail = student.email;
+          curAM = student.AM;
+        } else {
+          continue;
+        }
+        let studId = student.id;
+        for (var y = 0; y < teaching.length; y++) {
+          teachingYears = [];
+          let year = teaching[y].year;
+
+          if (teaching.some((obj) => obj.year === year)) {
+            teachingYears.push(year);
+            curCourse = teaching[y].courseName;
+          } else {
+            teachingYears = [year];
+            curCourse = teaching[y].courseName;
+          }
+        }
+        var object = {
+          curAM,
+          curStud,
+          curEmail,
+          curCourse,
+          teachingYears,
+          studId,
+        };
+
+        data.push(object);
+      }
+
+      res.render('allCourseStudents', {
+        data: data,
+        user: { user: JSON.stringify(user) },
+        role: role,
+      });
     }
+  } catch (e) {
+    console.log(e);
+    res.status(500).send();
+  }
 });
+
 
 
 
