@@ -43,9 +43,12 @@
                                 <td id="theoryWeight">{{generalTheoryWeight}}</td>
                                 <td id="theoryBound">{{lowTheoryBound}}</td>
                                 <td>
-                                    <button type="button" class="btn btn-primary edit-button" data-toggle="modal"
-                                        data-target="#editModal1" onclick="openEditModal('theory')">
+                                    <button type="button" class="btn btn-primary edit-button" data-celltype="theory">
                                         Edit
+                                    </button>
+                                    <button type="button" class="btn btn-primary save-button" data-celltype="theory"
+                                        style="display: none;">
+                                        Save
                                     </button>
                                 </td>
                             </tr>
@@ -54,9 +57,12 @@
                                 <td id="labWeight">{{generalLabWeight}}</td>
                                 <td id="labBound">{{lowLabBound}}</td>
                                 <td>
-                                    <button type="button" class="btn btn-primary edit-button" data-toggle="modal"
-                                        data-target="#editModal2" onclick="openEditModal('lab')">
+                                    <button type="button" class="btn btn-primary edit-button" data-celltype="lab">
                                         Edit
+                                    </button>
+                                    <button type="button" class="btn btn-primary save-button" data-celltype="lab"
+                                        style="display: none;">
+                                        Save
                                     </button>
                                 </td>
                             </tr>
@@ -164,18 +170,62 @@
 
                 var sumTh = 0;
                 var sumLab = 0;
+                var editGeneralTheoryWeight
+                var editGeneralLabWeight
+                var editGeneralTheoryBound
+                var editGeneralLabBound
 
+                function saveTableCellValues(cellType) {
+                    const weightCell = document.getElementById(`${cellType}Weight`);
+                    const boundCell = document.getElementById(`${cellType}Bound`);
 
-                function openEditModal(type) {
-                    const weightElement = document.getElementById(`${type}Weight`);
-                    const boundElement = document.getElementById(`${type}Bound`);
+                    const weightInputValue = weightCell.children[0].value;
+                    const boundInputValue = boundCell.children[0].value;
 
-                    const weightValue = prompt("Enter the new weight:");
-                    const boundValue = prompt("Enter the new bound:");
+                    weightCell.innerText = weightInputValue;
+                    boundCell.innerText = boundInputValue;
 
-                    weightElement.textContent = weightValue;
-                    boundElement.textContent = boundValue;
+                    // Use the values here
+                    if (cellType === 'theory') {
+                        editGeneralTheoryWeight = weightInputValue;
+                        editGeneralTheoryBound = boundInputValue;
+                    } else if (cellType === 'lab') {
+                        editGeneralLabWeight = weightInputValue;
+                        editGeneralLabBound = boundInputValue;
+                    }
                 }
+
+                function editTableCells(cellType) {
+                    const weightCell = document.getElementById(`${cellType}Weight`);
+                    const boundCell = document.getElementById(`${cellType}Bound`);
+                    const saveButton = document.querySelector(`.save-button[data-celltype=${cellType}]`);
+
+                    const weightCellValue = weightCell.innerText;
+                    const boundCellValue = boundCell.innerText;
+
+                    weightCell.innerHTML = `<input type="text" value="${weightCellValue}" class="form-control">`;
+                    boundCell.innerHTML = `<input type="text" value="${boundCellValue}" class="form-control">`;
+
+                    saveButton.style.display = "inline-block";
+                }
+
+                const saveButtons = document.getElementsByClassName("save-button");
+
+                Array.from(saveButtons).forEach(button => {
+                    button.addEventListener("click", event => {
+                        const cellType = event.target.getAttribute('data-celltype');
+                        saveTableCellValues(cellType);
+                    });
+                });
+
+                const editButtons = document.getElementsByClassName("edit-button");
+
+                Array.from(editButtons).forEach(button => {
+                    button.addEventListener("click", event => {
+                        const cellType = event.target.getAttribute('data-celltype');
+                        editTableCells(cellType);
+                    });
+                });
 
                 const theoryName = document.getElementsByClassName('.theory-name')
                 const theoryWeight = document.querySelector('#theoryWeight')
@@ -214,10 +264,7 @@
                     var data = {}
                     var theory = []
                     var lab = []
-                    var editGeneralTheoryWeight
-                    var editGeneralLabWeight
-                    var editGeneralTheoryBound
-                    var editGeneralLabBound
+
                     var boundTh = []
                     var boundLab = []
                     var boundIds
@@ -261,37 +308,7 @@
                         }
                     });
 
-                    $('.form-control3').each(function () {
-                        var textVal3 = $(this).val();
-
-                        if (textVal3 !== undefined && textVal3 !== '') {
-                            editGeneralTheoryWeight = textVal3
-
-                        } else if (textVal3 === null) {
-                            editGeneralTheoryWeight = 0
-                        }
-                    });
-
-                    $('.form-control4').each(function () {
-                        var textVal4 = $(this).val();
-                        if (textVal4 != 0) {
-                            editGeneralTheoryBound = textVal4
-                        }
-                    });
-                    $('.form-control5').each(function () {
-                        var textVal5 = $(this).val();
-                        if (textVal5 !== undefined && textVal5 !== '') {
-                            editGeneralLabWeight = textVal5
-                        } else if (textVal5 === null) {
-                            editGeneralLabWeight = 0
-                        }
-                    });
-                    $('.form-control6').each(function () {
-                        var textVal6 = $(this).val();
-                        if (textVal6 != 0) {
-                            editGeneralLabBound = textVal6
-                        }
-                    });
+                   
                     $('.form-control7').each(function () {
                         var textVal7 = $(this).val();
                         if (textVal7 !== undefined && textVal7 !== '') {
@@ -336,7 +353,7 @@
                     });
 
                     // checking the sum of weights
-                    
+
                     var theoryTable = $('#childTable').find('tbody tr');
                     var labTable = $('#childTable2').find('tbody tr');
 
@@ -359,7 +376,7 @@
                         return false;
                     }
 
-               
+
                     $.ajax({
                         url: window.location.pathname,
                         type: "PATCH",

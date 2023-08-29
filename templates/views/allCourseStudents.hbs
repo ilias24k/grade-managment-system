@@ -66,11 +66,13 @@
 
 
 
+                             {{#checkFlag ../role 'admin'}}
                                 <form action="/student/delete/{{studId}}" method="POST">
                                     <input type="hidden" name="id" value="{{ studId}}">
                                     <button class="btn btn-outline-danger"><i class="bi bi-person-x"></i><i
                                             onclick="deleting({{studId}})">Delete</button>
                                 </form>
+                                {{/checkFlag}}
                             </td>
 
                         </tr>

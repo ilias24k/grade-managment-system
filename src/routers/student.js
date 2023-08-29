@@ -345,21 +345,20 @@ router.get('/student', auth, async (req, res) => {
         var teachingYears = [];
         var studId = student.id;
 
-        if (student.teachings) {
-          for (var y = 0; y < student.teachings.length; y++) {
-            var teaching = student.teachings[y];
-            var year = teaching.year;
-
-            if (teachingYears.indexOf(year) === -1) {
+        var teaching = await Teaching.find({ students: students[i].id });
+        // FIX DUPS
+        for (var y = 0; y < teaching.length; y++) {
+            teachingYears = [];
+            let year = teaching[y].year;
+  
+            if (teaching.some((obj) => obj.year === year)) {
               teachingYears.push(year);
-            }
-
-            var course = await Course.findById(teaching.course);
-            if (course) {
-              curCourse = course.name;
+              curCourse = teaching[y].courseName;
+            } else {
+              teachingYears = [year];
+              curCourse = teaching[y].courseName;
             }
           }
-        }
 
         var object = {
           curAM,
@@ -369,10 +368,9 @@ router.get('/student', auth, async (req, res) => {
           teachingYears,
           studId,
         };
-
+        
         data.push(object);
       }
-
       res.render('allCourseStudents', {
         data: data,
         user: { user: JSON.stringify(user) },
@@ -728,12 +726,9 @@ router.put('/student/edit/:id/:teachingId', auth, async (req, res) => {
 
                 } else {
                     gradeTheory[i] = theoryGrade[i]
-                    // finalGradTheory += gradeTheory[i]                    
                 }
-                // finalGradTheory += gradeTheory[i]
             }
-            // console.log('thewria ', gradeTheory, finalGradTheory)
-            // console.log(course[0].lab.weight, labGrade, course[0].labBounds)
+            
             for (var i = 0; i < labGradeIds.length; i++) {
 
                 if (labGrade[i] >= course.labBounds.bound[i]) {
@@ -742,9 +737,7 @@ router.put('/student/edit/:id/:teachingId', auth, async (req, res) => {
 
                 } else {
                     gradeLab[i] = labGrade[i]
-                    // finalGradTheory += gradeTheory[i]                    
                 }
-                // finalGradLab += gradeLab[i]
             }
 
             var theoryGradeNum = theoryGrade.map(str => {
