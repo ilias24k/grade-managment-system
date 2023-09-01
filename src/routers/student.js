@@ -528,9 +528,9 @@ router.get('/course/student/check/:id', auth, async (req, res) => {
         var course
         for (var i = 0; i < years.length; i++) {
             teaching = await Teaching.findOne({ 'year': years[i], 'students': selStudent.id })
-            semesterList.push(teaching.semester)
+            semesterList.push(teaching.year)
             course = await Course.findOne({ "teachings": teaching.id })
-            object = { "year": years[i], "semester": semesterList[i] }
+            object = { "year": years[i], "Year of Teaching": semesterList[i] }
 
             if (theoryNames.length > 0) {
 
