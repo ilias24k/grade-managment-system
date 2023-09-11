@@ -60,60 +60,60 @@ var dir2 = './typical';
 
 const directory = 'files';
 
-//clearing file list on files directory every 10 secs
+// //clearing file list on files directory every 10 secs
 
-function clearFiles() {
+// function clearFiles() {
 
-  fs.readdir(directory, (err, files) => {
-    if (err) throw err;
+//   fs.readdir(directory, (err, files) => {
+//     if (err) throw err;
 
-    for (const file of files) {
-      fs.unlink(path.join(directory, file), err => {
-        if (err) throw err;
-      });
-    }
-  });
+//     for (const file of files) {
+//       fs.unlink(path.join(directory, file), err => {
+//         if (err) throw err;
+//       });
+//     }
+//   });
 
-  setTimeout(clearFiles, 10000);
-}
+//   setTimeout(clearFiles, 10000);
+// }
 
-clearFiles();
+// clearFiles();
 
-//deleting generated excel files 
+// //deleting generated excel files 
 
-const analyticalDir = 'analytical'
-const typicalDir = 'typical';
+// const analyticalDir = 'analytical'
+// const typicalDir = 'typical';
 
-function clearFiles2() {
-  if (!fs.existsSync(dir) && !fs.existsSync(dir2)) {
-    fs.mkdirSync(dir);
-    fs.mkdirSync(dir2)
-  } else {
-    fs.readdir(analyticalDir, (err, files) => {
-      if (err) throw err;
+// function clearFiles2() {
+//   if (!fs.existsSync(dir) && !fs.existsSync(dir2)) {
+//     fs.mkdirSync(dir);
+//     fs.mkdirSync(dir2)
+//   } else {
+//     fs.readdir(analyticalDir, (err, files) => {
+//       if (err) throw err;
 
-      for (const file of files) {
-        fs.unlink(path.join(analyticalDir, file), err => {
-          if (err) throw err;
-        });
-      }
-    });
-    fs.readdir(typicalDir, (err, files) => {
-      if (err) throw err;
+//       for (const file of files) {
+//         fs.unlink(path.join(analyticalDir, file), err => {
+//           if (err) throw err;
+//         });
+//       }
+//     });
+//     fs.readdir(typicalDir, (err, files) => {
+//       if (err) throw err;
 
-      for (const file of files) {
-        fs.unlink(path.join(typicalDir, file), err => {
-          if (err) throw err;
-        });
-      }
-    });
-  }
+//       for (const file of files) {
+//         fs.unlink(path.join(typicalDir, file), err => {
+//           if (err) throw err;
+//         });
+//       }
+//     });
+//   }
 
 
-  setTimeout(clearFiles2, 5000);
-}
+//   setTimeout(clearFiles2, 5000);
+// }
 
-clearFiles2();
+// clearFiles2();
 
 
 //checks every 24.8 days for updated grade in students and deletes them from course array if 
