@@ -82,10 +82,10 @@
                                         </select>
                                         <form></form>
                                         <form method="GET" action="/course/view/teaching/{{_id}}">
-                                            <input type="submit" class="btn btn-outline-info" value="View Students" />
+                                            <input type="submit" class="btn btn-info" value="View Students" />
                                         </form>
                                         {{#checkFlag ../role 'admin'}}
-                                       <button id="delete" class="btn btn-outline-danger" onClick="sent({{year}}, '{{semester}}')"><i class="bi bi-x"></i>Delete</button>
+                                       <button id="delete" class="btn btn-danger" onClick="sent({{year}}, '{{semester}}')"><i class="bi bi-x"></i>Delete</button>
 
                                         {{/checkFlag}}
 

@@ -58,12 +58,12 @@
                             {{#checkFlag flag.flag "0"}}
 
                             <button id="s1" type="button" onclick=' document.getElementById("myFile").click();'
-                                name="button24k" class="btn btn-outline-primary"><i class="bi bi-plus"></i><i>Add
+                                name="button24k" class="btn btn-primary"><i class="bi bi-plus"></i><i>Add
                                     Students</button>
                             <input type="hidden" name="col">
                             {{else}}
                             <button id="s1" disabled type="button" onclick=' document.getElementById("myFile").click();'
-                                name="button24k" class="btn btn-outline-primary"><i class="bi bi-plus"></i><i>Add
+                                name="button24k" class="btn btn-primary"><i class="bi bi-plus"></i><i>Add
                                     Students</button>
                             <input type="hidden" name="col">
                             {{/checkFlag}}
@@ -103,14 +103,14 @@
 
                                 <form action="/student/edit/{{_id}}" method="GET">
                                     <input type="hidden" name="teachingId" id="tId" value=" ">
-                                    <button id="button" class="btn btn-outline-primary"><i
+                                    <button id="button" class="btn btn-primary"><i
                                             class="bi bi-person-pencil"></i><i onclick="editing({{_id}})">Edit</button>
                                 </form>
 
 
                                 <form action="/student/teaching/delete/{{_id}}" method="POST">
                                     <input type="hidden" name="teachingId" id="tId2" value=" ">
-                                    <button id="button" class="btn btn-outline-danger"><i
+                                    <button id="button" class="btn btn-danger"><i
                                             class="bi bi-person-person-x"></i><i
                                             onclick="editing({{_id}})">Delete</button>
                                 </form>
